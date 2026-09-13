@@ -1,0 +1,17 @@
+pandas
+numpy
+scikit-learn
+sentence-transformers
+hdbscan
+xgboost
+joblib
+jupyter
+fastapi
+uvicorn
+pytest
+httpx
+python-multipart
+pillow
+transformers
+torch
+pytesseract

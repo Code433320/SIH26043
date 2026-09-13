@@ -1,0 +1,55 @@
+title,description,category,affected_people,severity,urgency,priority_score
+Water Storage,Villagers do not have access to clean drinking water.,Water and Sanitation,500,8,9,8.6
+Water shortage in village,Rural communities do not have safe drinking water facilities.,Water and Sanitation,450,7,8,7.9
+Contaminated well water,The main well in the village has been contaminated causing illness.,Water and Sanitation,300,9,9,9.0
+Open drainage causing disease,Open sewage drains near homes are causing frequent illness outbreaks.,Water and Sanitation,600,8,8,8.5
+Lack of public toilets,The area has no public toilet facilities forcing open defecation.,Water and Sanitation,1200,7,6,7.4
+Hospital understaffed,The local hospital does not have enough doctors for the population.,Health,3000,8,7,8.2
+No medicine stock,The primary health center frequently runs out of essential medicines.,Health,2000,7,8,7.8
+High malnutrition in children,Many children in the area show signs of malnutrition.,Health,800,9,8,8.8
+No ambulance service,The village has no ambulance for emergency medical transport.,Health,1500,9,9,9.2
+Lack of vaccination awareness,Low vaccination rates due to lack of awareness campaigns.,Health,2500,6,5,6.2
+School building damaged,The primary school roof collapsed during monsoon and classes are suspended.,Education,150,7,8,7.6
+Shortage of teachers,The government school lacks enough teachers for all subjects.,Education,400,6,6,6.3
+High dropout rate among girls,Girls are dropping out of school due to lack of safe transport.,Education,300,7,6,6.9
+No library access,Students have no library or study resources in the village.,Education,250,4,3,4.0
+Lack of digital learning tools,Schools do not have computers for digital literacy classes.,Education,350,5,4,4.6
+Potholed road causing accidents,The main road has deep potholes causing frequent vehicle accidents.,Transportation,2000,7,8,7.7
+No public bus service,Villagers have no bus connectivity to the nearest town.,Transportation,1800,6,6,6.2
+Bridge damaged after floods,The only bridge connecting two villages was damaged in recent floods.,Transportation,900,9,9,9.1
+Traffic congestion at main junction,Heavy traffic congestion causes long delays every morning.,Transportation,5000,5,5,5.1
+Unsafe railway crossing,The railway crossing has no barrier and has caused several accidents.,Transportation,1000,8,8,8.3
+Frequent power outages,The village experiences daily power cuts lasting several hours.,Electricity and Energy,2200,6,6,6.4
+No street lighting,Streets are completely dark at night creating safety risks.,Electricity and Energy,1500,6,7,6.6
+Old transformer needs replacement,An old transformer frequently fails causing extended outages.,Electricity and Energy,1800,7,7,7.1
+No electricity connection,Several households still do not have an electricity connection.,Electricity and Energy,600,7,5,6.3
+Solar panels not maintained,Installed solar street lights are broken and unmaintained.,Electricity and Energy,400,4,3,3.8
+Crop damage due to poor irrigation,Farmers are losing crops due to lack of irrigation facilities.,Agriculture,700,8,8,8.1
+Pest infestation destroying crops,A pest outbreak is destroying the seasonal harvest.,Agriculture,500,7,9,7.9
+No storage for grains,Farmers lack proper storage leading to post-harvest losses.,Agriculture,600,6,5,5.9
+Low market prices for produce,Farmers are unable to get fair prices for their produce.,Agriculture,900,5,4,4.8
+Soil degradation reducing yield,Years of overuse have degraded soil quality reducing crop yield.,Agriculture,450,6,4,5.2
+Illegal dumping of waste,Garbage is being illegally dumped near residential areas.,Environment,1200,6,6,6.1
+Deforestation near village,Nearby forests are being cleared rapidly affecting local climate.,Environment,3000,7,5,6.4
+Air pollution from factory,A nearby factory is releasing pollutants causing respiratory issues.,Environment,2500,8,7,7.9
+No waste segregation system,The area has no system for segregating recyclable waste.,Environment,1000,4,3,3.9
+River pollution from sewage,Untreated sewage is being released directly into the river.,Environment,4000,9,8,8.9
+Community hall in disrepair,The only community hall used for public events is unusable.,Infrastructure,600,4,3,3.7
+No proper drainage system,Streets flood during every rainy season due to poor drainage.,Infrastructure,1800,7,8,7.5
+Lack of public parks,The area has no parks or recreational space for residents.,Infrastructure,900,3,2,3.0
+Old government building unsafe,A government office building shows structural cracks.,Infrastructure,300,7,6,6.5
+Poor internet connectivity,Most of the village has no reliable internet access.,Infrastructure,1500,4,4,4.2
+Rising theft incidents,The neighborhood has seen a sharp increase in theft cases.,Public Safety,800,7,7,7.2
+No fire station nearby,The nearest fire station is over an hour away.,Public Safety,2000,8,7,7.8
+Poor street lighting increases crime,Dark streets are linked to a rise in evening crime.,Public Safety,1000,6,6,6.1
+Flood-prone area lacks warning system,The area floods yearly with no early warning system in place.,Public Safety,2500,9,9,9.0
+Weak police presence,Residents report a lack of visible police patrolling.,Public Safety,1200,5,5,5.0
+Families living in slum conditions,Several families live in overcrowded and unsafe housing.,Housing,700,8,6,7.0
+No affordable housing scheme,Low income families struggle to find affordable housing.,Housing,1100,6,5,5.6
+Homeless individuals near market,A growing number of homeless people have no shelter access.,Housing,150,7,6,6.4
+Housing damaged by recent storm,Several homes were damaged in a recent storm and remain unrepaired.,Housing,300,8,8,8.0
+High youth unemployment,Many young people in the area are unable to find jobs.,Employment,2000,6,5,5.7
+Lack of skill training centers,There are no centers offering vocational skill training.,Employment,1500,5,4,4.7
+Seasonal laborers face job insecurity,Agricultural laborers have no work during off seasons.,Employment,1000,6,6,6.0
+Gender pay gap in local industry,Women workers report being paid less for the same work.,Employment,600,6,4,5.1
+Street vendors facing eviction,Local vendors face repeated eviction without alternate arrangements.,Employment,250,5,5,4.9
