@@ -67,6 +67,18 @@ CATEGORY_DESCRIPTIONS = {
 CATEGORY_LABELS = list(CATEGORY_DESCRIPTIONS.keys())
 
 # ---------------------------------------------------------------------------
+# Image processing
+# ---------------------------------------------------------------------------
+# BLIP image captioning model. ~1GB download on first use -- only loaded
+# lazily when an image is actually submitted (see src/image_processing.py),
+# so it never slows down startup or text-only requests.
+IMAGE_CAPTION_MODEL = "Salesforce/blip-image-captioning-base"
+
+# Max upload size the API will accept for an image, in bytes.
+MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10MB
+
+
+# ---------------------------------------------------------------------------
 # Duplicate detection
 # ---------------------------------------------------------------------------
 # Cosine similarity above this value => flagged as a duplicate.
@@ -104,3 +116,26 @@ MODELS_DIR = "models"
 PROBLEM_STORE_PATH = f"{MODELS_DIR}/problem_store.pkl"
 PRIORITY_MODEL_PATH = f"{MODELS_DIR}/priority_model.joblib"
 CLASSIFIER_MODEL_PATH = f"{MODELS_DIR}/classifier_model.joblib"
+
+# ---------------------------------------------------------------------------
+# Solution evaluation (Pipeline 2: ranking proposed solutions to a problem)
+# ---------------------------------------------------------------------------
+# How much each factor counts toward a solution's final score. Weights sum
+# to 1.0. "Relevance" checks the solution's plan actually addresses the
+# original problem (via embedding similarity) -- a cheap, fast, irrelevant
+# "solution" should NOT win just because it's cheap and fast.
+SOLUTION_WEIGHTS = {
+    "relevance": 0.25,      # does the plan actually address this problem?
+    "cost": 0.20,           # lower estimated cost is better
+    "time": 0.15,           # shorter estimated timeline is better
+    "track_record": 0.25,   # more relevant past experience is better
+    "profit": 0.15,         # lower profit margin is better (public money going further)
+}
+
+SOLUTION_STORE_PATH = f"{MODELS_DIR}/solution_store.pkl"
+
+# A solution is flagged "low relevance" (surfaced as a warning, not
+# auto-rejected -- a human should still see it) below this similarity to
+# the original problem's embedding.
+SOLUTION_RELEVANCE_WARNING_THRESHOLD = 0.35
+

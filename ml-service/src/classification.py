@@ -23,7 +23,7 @@ Two modes, chosen automatically:
 
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 import joblib
 import numpy as np
@@ -55,34 +55,55 @@ class ProblemClassifier:
         return None
 
     def classify(self, embedding: np.ndarray) -> ClassificationResult:
-        if self._trained_model is not None:
-            return self._classify_trained(embedding)
-        return self._classify_zero_shot(embedding)
+        """Returns just the single best category (kept for simplicity/back-compat)."""
+        return self.classify_top_n(embedding, n=1)[0]
 
-    def _classify_zero_shot(self, embedding: np.ndarray) -> ClassificationResult:
+    def classify_top_n(self, embedding: np.ndarray, n: int = 2) -> List[ClassificationResult]:
+        """
+        Returns the top `n` candidate categories, best first. Useful for
+        ambiguous problems that genuinely touch more than one category
+        (e.g. "garbage dumped near a school" -- both Environment and
+        Education are plausible) -- showing the top 2-3 instead of forcing
+        a single guess is more honest about the model's uncertainty than
+        hiding it behind one low-confidence label.
+        """
+        if self._trained_model is not None:
+            return self._classify_trained_top_n(embedding, n)
+        return self._classify_zero_shot_top_n(embedding, n)
+
+    def _classify_zero_shot_top_n(
+        self, embedding: np.ndarray, n: int
+    ) -> List[ClassificationResult]:
         similarities = self._category_embeddings @ embedding
-        best_idx = int(np.argmax(similarities))
         # Softmax over similarities gives an interpretable confidence value
         # rather than a raw cosine score, which can look artificially low.
         exp_scores = np.exp((similarities - similarities.max()) * 10)
         probs = exp_scores / exp_scores.sum()
 
-        return ClassificationResult(
-            category=CATEGORY_LABELS[best_idx],
-            confidence=round(float(probs[best_idx]), 4),
-            method="zero_shot",
-        )
+        ranked_indices = np.argsort(probs)[::-1][:n]
+        return [
+            ClassificationResult(
+                category=CATEGORY_LABELS[idx],
+                confidence=round(float(probs[idx]), 4),
+                method="zero_shot",
+            )
+            for idx in ranked_indices
+        ]
 
-    def _classify_trained(self, embedding: np.ndarray) -> ClassificationResult:
+    def _classify_trained_top_n(
+        self, embedding: np.ndarray, n: int
+    ) -> List[ClassificationResult]:
         probs = self._trained_model.predict_proba(embedding.reshape(1, -1))[0]
-        best_idx = int(np.argmax(probs))
-        category = self._trained_model.classes_[best_idx]
-
-        return ClassificationResult(
-            category=str(category),
-            confidence=round(float(probs[best_idx]), 4),
-            method="trained_model",
-        )
+        ranked_indices = np.argsort(probs)[::-1][:n]
+        classes = self._trained_model.classes_
+        return [
+            ClassificationResult(
+                category=str(classes[idx]),
+                confidence=round(float(probs[idx]), 4),
+                method="trained_model",
+            )
+            for idx in ranked_indices
+        ]
 
 
 def train_from_csv(csv_path: str = "data/sample_problems.csv") -> Optional[str]:

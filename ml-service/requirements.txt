@@ -10,3 +10,8 @@ fastapi
 uvicorn
 pytest
 httpx
+python-multipart
+pillow
+transformers
+torch
+pytesseract
