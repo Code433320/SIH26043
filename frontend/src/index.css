@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary-blue: #006199;
+  --color-sky-blue: #8ACFF8;
+  --color-soft-lemon: #F4EB6C;
+  --color-premium-gold: #FFD444;
+  --color-navy-dark: #003F66;
+  --color-canvas: #F8FAFC;
+}
+
+:root {
+  --primary-blue: #006199;
+  --sky-blue: #8ACFF8;
+  --soft-lemon: #F4EB6C;
+  --premium-gold: #FFD444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphism & Elevation */
+.premium-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 97, 153, 0.08);
+  box-shadow: 0 4px 20px -2px rgba(0, 97, 153, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-card:hover {
+  border-color: rgba(0, 97, 153, 0.2);
+  box-shadow: 0 12px 30px -4px rgba(0, 97, 153, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+}
+
+.gold-badge {
+  background: linear-gradient(135deg, #FFD444 0%, #F4EB6C 100%);
+  color: #003F66;
+  font-weight: 700;
+}
+
+.blue-active-glow {
+  box-shadow: 0 0 15px rgba(0, 97, 153, 0.25);
+}
+
+.gold-active-glow {
+  box-shadow: 0 0 18px rgba(255, 212, 68, 0.45);
+}
+
+/* Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #006199;
+}

@@ -1,0 +1,132 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { 
+  LayoutDashboard, 
+  PlusCircle, 
+  FileText, 
+  Bell, 
+  User, 
+  ShieldCheck,
+  ChevronRight,
+  LogOut
+} from 'lucide-react';
+import { CITIZEN_PROFILE } from '../data/mockData';
+
+export default function Sidebar({ activeTab, setActiveTab, unreadCount = 2 }) {
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'report', label: 'Report a Problem', icon: PlusCircle, isCta: true },
+    { id: 'my-reports', label: 'My Reports', icon: FileText },
+    { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+    { id: 'profile', label: 'Profile', icon: User },
+  ];
+
+  return (
+    <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between h-screen sticky top-0 z-30 select-none hidden lg:flex">
+      {/* Brand Header */}
+      <div>
+        <div className="p-6 border-b border-slate-100 flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-[#006199] flex items-center justify-center text-white shadow-md shadow-[#006199]/20">
+            <ShieldCheck className="w-6 h-6 text-[#FFD444]" />
+          </div>
+          <div>
+            <h1 className="text-lg font-black tracking-tight text-[#006199] leading-none">
+              Civic<span className="text-[#FFD444] font-black"> Samadhan</span>
+            </h1>
+            <p className="text-[11px] font-medium text-slate-400 tracking-wider uppercase mt-1">
+              Civic Problem Resolution
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="p-4 space-y-1.5">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+
+            if (item.isCta) {
+              return (
+                <motion.button
+                  key={item.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setActiveTab(item.id)}
+                  className="w-full my-3 px-4 py-3 rounded-xl bg-[#FFD444] hover:bg-[#ffe066] text-[#003F66] font-bold flex items-center justify-between shadow-md shadow-[#FFD444]/30 transition-all border border-[#FFD444]"
+                >
+                  <span className="flex items-center space-x-2 text-sm">
+                    <PlusCircle className="w-5 h-5 text-[#006199]" />
+                    <span>Report a Problem</span>
+                  </span>
+                  <span className="text-xs font-mono font-black px-1.5 py-0.5 rounded bg-white/60">
+                    +NEW
+                  </span>
+                </motion.button>
+              );
+            }
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full relative px-4 py-3 rounded-xl flex items-center justify-between text-sm font-semibold transition-colors duration-150 ${
+                  isActive 
+                    ? "text-white font-bold" 
+                    : "text-slate-600 hover:text-[#006199] hover:bg-slate-50"
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeNav"
+                    className="absolute inset-0 bg-[#006199] rounded-xl shadow-md shadow-[#006199]/20"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                
+                <span className="relative z-10 flex items-center space-x-3">
+                  <Icon className={`w-5 h-5 ${isActive ? "text-[#FFD444]" : "text-slate-400 group-hover:text-[#006199]"}`} />
+                  <span>{item.label}</span>
+                </span>
+
+                {item.badge > 0 && (
+                  <span className={`relative z-10 text-xs px-2 py-0.5 rounded-full font-bold ${
+                    isActive ? "bg-[#FFD444] text-[#003F66]" : "bg-[#8ACFF8]/30 text-[#006199]"
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Citizen Mini Profile Card */}
+      <div className="p-4 border-t border-slate-100">
+        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors">
+          <div className="flex items-center space-x-3 min-w-0">
+            <img 
+              src={CITIZEN_PROFILE.avatarUrl} 
+              alt={CITIZEN_PROFILE.name} 
+              className="w-9 h-9 rounded-full object-cover border border-[#006199]/20 flex-shrink-0" 
+            />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-900 truncate leading-tight">
+                {CITIZEN_PROFILE.name}
+              </p>
+              <p className="text-[10px] font-mono text-slate-500 truncate mt-0.5">
+                {CITIZEN_PROFILE.citizenId}
+              </p>
+            </div>
+          </div>
+          <button 
+            title="Citizen Portal Active"
+            className="p-1.5 text-slate-400 group-hover:text-[#006199] transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
