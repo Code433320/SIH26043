@@ -28,7 +28,7 @@ import SolutionPreview from './views/Industry/SolutionPreview.jsx'
 
 //Gov Portal
 import GovernmentLayout from './views/Gov/GovernmentLayout.jsx'
-import GovernmentDashboard from './views/gov/GovernmentDashboard.jsx'
+import GovernmentDashboard from './views/Gov/GovernmentDashboard.jsx'
 import VerifyProblems from './views/Gov/VerifyProblems.jsx'
 import MonitorProjects from './views/Gov/MonitorProjects.jsx'
 import GovernmentProfile from './views/Gov/GovernmentProfile.jsx'
@@ -76,22 +76,14 @@ createRoot(document.getElementById("root")).render(
           />
         </Route>
 
-        {/* Citizen Portal */}
-        <Route
-          path="/*"
-          element={<App />}
-        />
-        
-      
-        
-      <Route path="/industry" element={<IndustryLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<IndustryDashboard />} />
-            <Route path="explore-solutions" element={<ExploreSolutions />} />
-            <Route path="my-engagements" element={<MyEngagements />} />
-            <Route path="solutions/:solutionId" element={<SolutionPreview />} />
-            <Route path="profile" element={<IndustryProfile />} />
-          </Route>
+        <Route path="/industry" element={<IndustryLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<IndustryDashboard />} />
+          <Route path="explore-solutions" element={<ExploreSolutions />} />
+          <Route path="my-engagements" element={<MyEngagements />} />
+          <Route path="solutions/:solutionId" element={<SolutionPreview />} />
+          <Route path="profile" element={<IndustryProfile />} />
+        </Route>
 
         <Route path="/government" element={<GovernmentLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
@@ -101,7 +93,10 @@ createRoot(document.getElementById("root")).render(
           <Route path="projects/:projectId" element={<ProjectPreview />} />
           <Route path="profile" element={<GovernmentProfile />} />
         </Route>
-          </Routes>
+
+        {/* Landing, Auth, and Citizen Portal */}
+        <Route path="/*" element={<App />} />
+      </Routes>
     </BrowserRouter>
   </StrictMode>
 );

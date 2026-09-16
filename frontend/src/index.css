@@ -1,20 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Archivo:wght@400;500;600;700;800;900&family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-primary-blue: #006199;
-  --color-sky-blue: #8ACFF8;
-  --color-soft-lemon: #F4EB6C;
-  --color-premium-gold: #FFD444;
-  --color-navy-dark: #003F66;
   --color-canvas: #F8FAFC;
+  --color-primary-blue: #006199;
+  --color-navy-dark: #003F66;
+  --color-premium-gold: #FFD444;
+  --color-soft-lemon: #F4EB6C;
+  --color-sky-blue: #8ACFF8;
+  --color-line: #E2E8F0;
+  --color-text-main: #0F172A;
+  --color-text-muted: #64748B;
 }
 
 :root {
+  --canvas: #F8FAFC;
   --primary-blue: #006199;
-  --sky-blue: #8ACFF8;
-  --soft-lemon: #F4EB6C;
+  --navy-dark: #003F66;
   --premium-gold: #FFD444;
+  --soft-lemon: #F4EB6C;
+  --sky-blue: #8ACFF8;
+  --line: #E2E8F0;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
 }
 
 * {
@@ -22,7 +30,7 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Public Sans', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: #F8FAFC;
   color: #0F172A;
   margin: 0;
