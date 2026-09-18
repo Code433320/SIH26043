@@ -10,14 +10,19 @@ import {
   GraduationCap,
   Users,
   BadgeCheck,
-  ArrowRight
+  ArrowRight,
+  LogOut
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import { apiFetch } from '../../lib/apiClient';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export default function UniversityProfile() {
   const { profile } = useAuth();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [projectCount, setProjectCount] = useState(0);
   const [problemCount, setProblemCount] = useState(0);
   const [profileError, setProfileError] = useState('');
@@ -47,6 +52,13 @@ export default function UniversityProfile() {
     { label: 'Problem Resolutions', value: String(projectCount) },
     { label: 'Industry Networks', value: 'N/A' },
   ];
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    const { error } = await signOut();
+    if (!error) navigate('/', { replace: true });
+    setIsLoggingOut(false);
+  };
   const containerVariants = {
     hidden: { opacity: 0, y: 15 },
     visible: {
@@ -84,10 +96,10 @@ export default function UniversityProfile() {
             </div>
           </div>
 
-          <button className="px-5 py-3 rounded-xl bg-[#FFD444] hover:bg-[#ffe066] text-[#003F66] font-bold text-sm flex items-center justify-center space-x-2 shadow-md shadow-[#FFD444]/30 border border-[#FFD444]">
-            <BadgeCheck className="w-4 h-4 text-[#006199]" />
-            <span>Verified Institution</span>
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button className="px-5 py-3 rounded-xl bg-[#FFD444] hover:bg-[#ffe066] text-[#003F66] font-bold text-sm flex items-center justify-center space-x-2 shadow-md shadow-[#FFD444]/30 border border-[#FFD444]"><BadgeCheck className="w-4 h-4 text-[#006199]" /><span>Verified Institution</span></button>
+            <button onClick={handleLogout} disabled={isLoggingOut} className="px-5 py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"><LogOut className="w-4 h-4" />{isLoggingOut ? 'Logging out...' : 'Logout'}</button>
+          </div>
         </div>
       </div>
 

@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Phone, MapPin, Bell, Shield, Check, Save } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Bell, Shield, Check, Save, LogOut } from 'lucide-react';
 import { CITIZEN_PROFILE } from '../data/mockData';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProfileView() {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [profile, setProfile] = useState(CITIZEN_PROFILE);
   const [prefs, setPrefs] = useState(CITIZEN_PROFILE.notificationPrefs);
   const [saved, setSaved] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const togglePref = (key) => {
     setPrefs({ ...prefs, [key]: !prefs[key] });
@@ -17,14 +22,27 @@ export default function ProfileView() {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    const { error } = await signOut();
+    if (!error) navigate('/', { replace: true });
+    setIsLoggingOut(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
         <h2 className="text-2xl font-black text-slate-900">Citizen Profile & Settings</h2>
         <p className="text-xs text-slate-500 mt-0.5">
           Manage your verified citizen credentials, contact details, and notification preferences.
         </p>
+        </div>
+        <button onClick={handleLogout} disabled={isLoggingOut} className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-60">
+          <LogOut className="w-4 h-4" />
+          {isLoggingOut ? 'Logging out...' : 'Logout'}
+        </button>
       </div>
 
       {/* Main Profile Card Header */}

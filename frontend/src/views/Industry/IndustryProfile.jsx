@@ -10,13 +10,17 @@ import {
   Handshake,
   BadgeCheck,
   ArrowRight
+  ,LogOut
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import { apiFetch } from '../../lib/apiClient';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export default function IndustryProfile() {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [engagementCount, setEngagementCount] = useState(0);
   const [profileError, setProfileError] = useState('');
   const profileData = profile?.profile_data || {};
@@ -28,6 +32,13 @@ export default function IndustryProfile() {
   }, []);
 
   const focus = profileData.domainInterest || profileData.focus || 'Not set';
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    const { error } = await signOut();
+    if (!error) navigate('/', { replace: true });
+    setIsLoggingOut(false);
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 max-w-7xl mx-auto">
@@ -41,7 +52,7 @@ export default function IndustryProfile() {
               <p className="text-xs sm:text-sm text-slate-500 mt-1">Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : 'N/A'} • {profileData.type || 'Industry / NGO account'}</p>
             </div>
           </div>
-          <button className="px-5 py-3 rounded-xl bg-[#FFD444] text-[#003F66] font-bold text-sm flex items-center justify-center gap-2"><BadgeCheck className="w-4 h-4 text-[#006199]" /> Verified Partner</button>
+          <div className="flex flex-col sm:flex-row gap-2"><button className="px-5 py-3 rounded-xl bg-[#FFD444] text-[#003F66] font-bold text-sm flex items-center justify-center gap-2"><BadgeCheck className="w-4 h-4 text-[#006199]" /> Verified Partner</button><button onClick={handleLogout} disabled={isLoggingOut} className="px-5 py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"><LogOut className="w-4 h-4" />{isLoggingOut ? 'Logging out...' : 'Logout'}</button></div>
         </div>
       </div>
 
