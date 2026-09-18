@@ -89,7 +89,7 @@ export default function GovernmentSidebar() {
         <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors">
           <div className="flex items-center space-x-3 min-w-0">
             <img
-              src={GOVERNMENT_PROFILE.avatarUrl}
+              src={profile?.profile_data?.avatarUrl || '/logo.png'}
               alt={profile?.name || 'Government'}
               className="w-9 h-9 rounded-full object-cover border border-[#006199]/20 flex-shrink-0"
             />

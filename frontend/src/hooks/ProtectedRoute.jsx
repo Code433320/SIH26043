@@ -14,7 +14,7 @@ export default function ProtectedRoute({ allowedRoles }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">
-        Loading...
+        Loading your account...
       </div>
     );
   }
