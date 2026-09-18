@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Mail,
@@ -13,32 +13,40 @@ import {
   ArrowRight
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
-
-const UNIVERSITY_PROFILE = {
-  name: 'College of Engineering, Pune',
-  shortName: 'SKNCOE',
-  universityId: 'UNIV-SKNOCE-0417',
-  email: 'civic.cell@skncoe.ac.in',
-  city: 'Pune',
-  state: 'Maharashtra',
-  memberSince: 'August 2025',
-  campus: 'Wellesley Road, Shivajinagar',
-  type: 'Public Engineering Institute',
-  focus: ['Urban Mobility', 'Water Systems', 'Smart Governance', 'Sustainable Infrastructure'],
-  totalStudents: 8600,
-  activeFaculty: 42,
-  communityProjects: 18,
-  successRate: '92%'
-};
-
-const PERFORMANCE_POINTS = [
-  { label: 'Civic Collaborations', value: '14' },
-  { label: 'Research Teams', value: '09' },
-  { label: 'Problem Resolutions', value: '26' },
-  { label: 'Industry Networks', value: '03' }
-];
+import { apiFetch } from '../../lib/apiClient';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function UniversityProfile() {
+  const { profile } = useAuth();
+  const [projectCount, setProjectCount] = useState(0);
+  const [problemCount, setProblemCount] = useState(0);
+  const [profileError, setProfileError] = useState('');
+
+  const profileData = profile?.profile_data || {};
+  const focus = profileData.focus
+    ? String(profileData.focus).split(',').map((item) => item.trim()).filter(Boolean)
+    : [];
+
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    Promise.all([
+      apiFetch(`/solutions?university_id=${encodeURIComponent(profile.id)}`),
+      apiFetch(`/problems?university_id=${encodeURIComponent(profile.id)}`),
+    ])
+      .then(([solutionsResponse, problemsResponse]) => {
+        setProjectCount((solutionsResponse.data || []).length);
+        setProblemCount((problemsResponse.data || []).length);
+      })
+      .catch((error) => setProfileError(error.message || 'Could not load profile activity.'));
+  }, [profile?.id]);
+
+  const performancePoints = [
+    { label: 'Civic Collaborations', value: String(problemCount) },
+    { label: 'Research Teams', value: 'N/A' },
+    { label: 'Problem Resolutions', value: String(projectCount) },
+    { label: 'Industry Networks', value: 'N/A' },
+  ];
   const containerVariants = {
     hidden: { opacity: 0, y: 15 },
     visible: {
@@ -68,10 +76,10 @@ export default function UniversityProfile() {
                 <span>University Profile</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                {UNIVERSITY_PROFILE.name}
+                {profile?.name || 'University'}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Member since {UNIVERSITY_PROFILE.memberSince} • {UNIVERSITY_PROFILE.type}
+                Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : 'N/A'} • {profileData.type || 'Institutional account'}
               </p>
             </div>
           </div>
@@ -84,10 +92,10 @@ export default function UniversityProfile() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="STUDENTS" value={String(UNIVERSITY_PROFILE.totalStudents)} icon={Users} colorTheme="sky" highlightText="Active" />
-        <StatCard label="FACULTY" value={String(UNIVERSITY_PROFILE.activeFaculty)} icon={GraduationCap} colorTheme="gold" highlightText="Led" />
-        <StatCard label="PROJECTS" value={String(UNIVERSITY_PROFILE.communityProjects)} icon={Building2} colorTheme="sky" highlightText="Ongoing" />
-        <StatCard label="SUCCESS RATE" value={UNIVERSITY_PROFILE.successRate} icon={ShieldCheck} colorTheme="lemon" highlightText="Impact" />
+        <StatCard label="STUDENTS" value="N/A" icon={Users} colorTheme="sky" highlightText="Not set" />
+        <StatCard label="FACULTY" value="N/A" icon={GraduationCap} colorTheme="gold" highlightText="Not set" />
+        <StatCard label="PROJECTS" value={String(projectCount)} icon={Building2} colorTheme="sky" highlightText="Live" />
+        <StatCard label="SUCCESS RATE" value="N/A" icon={ShieldCheck} colorTheme="lemon" highlightText="Pending" />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_0.9fr] gap-6">
@@ -96,7 +104,7 @@ export default function UniversityProfile() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900">Institution Overview</h3>
               <span className="text-xs font-mono font-bold text-[#006199] bg-[#8ACFF8]/20 px-2.5 py-1 rounded-md">
-                {UNIVERSITY_PROFILE.universityId}
+                {profile?.id || 'ID unavailable'}
               </span>
             </div>
 
@@ -106,7 +114,7 @@ export default function UniversityProfile() {
                   <Building2 className="w-4 h-4" />
                   <span className="font-bold">Campus</span>
                 </div>
-                <p>{UNIVERSITY_PROFILE.campus}</p>
+                <p>{profileData.campus || 'Not set'}</p>
               </div>
 
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
@@ -114,7 +122,7 @@ export default function UniversityProfile() {
                   <MapPin className="w-4 h-4" />
                   <span className="font-bold">Location</span>
                 </div>
-                <p>{UNIVERSITY_PROFILE.city}, {UNIVERSITY_PROFILE.state}</p>
+                <p>{profileData.city || 'Not set'}, {profileData.state || 'Not set'}</p>
               </div>
 
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
@@ -122,7 +130,7 @@ export default function UniversityProfile() {
                   <Mail className="w-4 h-4" />
                   <span className="font-bold">Email</span>
                 </div>
-                <p>{UNIVERSITY_PROFILE.email}</p>
+                <p>{profile?.email || 'Not set'}</p>
               </div>
 
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
@@ -130,7 +138,7 @@ export default function UniversityProfile() {
                   <CalendarRange className="w-4 h-4" />
                   <span className="font-bold">Membership</span>
                 </div>
-                <p>{UNIVERSITY_PROFILE.memberSince}</p>
+                <p>{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-IN') : 'Not set'}</p>
               </div>
             </div>
           </div>
@@ -142,7 +150,8 @@ export default function UniversityProfile() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {UNIVERSITY_PROFILE.focus.map((topic) => (
+              {focus.length === 0 && <span className="text-sm text-slate-500">No research focus added yet.</span>}
+              {focus.map((topic) => (
                 <span
                   key={topic}
                   className="px-3 py-1.5 rounded-full text-xs font-bold bg-[#8ACFF8]/20 text-[#006199] border border-[#8ACFF8]/30"
@@ -162,7 +171,7 @@ export default function UniversityProfile() {
             </div>
 
             <div className="space-y-3">
-              {PERFORMANCE_POINTS.map((item) => (
+              {performancePoints.map((item) => (
                 <div key={item.label} className="rounded-xl bg-slate-50 border border-slate-100 p-3 flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{item.label}</span>
                   <span className="text-base font-black text-slate-900">{item.value}</span>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -15,75 +15,8 @@ import {
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import ReportCard from '../../components/ReportCard';
-
-const DISCOVERY_PROBLEMS = [
-  {
-    id: 'CIV-2026-1180',
-    title: 'Broken drain cover near market lane',
-    category: 'Drainage',
-    location: 'Aundh, Pune, Maharashtra',
-    submittedDate: '14 Sept 2026',
-    status: 'PENDING',
-    priority: 'HIGH',
-    matchScore: 94,
-    description: 'Loose drain cover creates safety hazards for pedestrians and a blockage risk during heavy rainfall.'
-  },
-  {
-    id: 'CIV-2026-1174',
-    title: 'Flooding after short rainfall',
-    category: 'Water Supply',
-    location: 'Kharadi, Pune, Maharashtra',
-    submittedDate: '11 Sept 2026',
-    status: 'ASSIGNED',
-    priority: 'HIGH',
-    matchScore: 91,
-    description: 'Standing water on roads after short rainfall causing traffic disruption and street-level drainage issues.'
-  },
-  {
-    id: 'CIV-2026-1162',
-    title: 'Streetlights missing near public park',
-    category: 'Street Light',
-    location: 'Yerawada, Pune, Maharashtra',
-    submittedDate: '8 Sept 2026',
-    status: 'CATEGORIZED',
-    priority: 'MEDIUM',
-    matchScore: 88,
-    description: 'Several key pedestrian zones remain under-lit after dark, affecting mobility and public safety.'
-  },
-  {
-    id: 'CIV-2026-1151',
-    title: 'Garbage overflow near school zone',
-    category: 'Waste Management',
-    location: 'Sinhagad Road, Pune, Maharashtra',
-    submittedDate: '6 Sept 2026',
-    status: 'PENDING',
-    priority: 'MEDIUM',
-    matchScore: 86,
-    description: 'Overflowing bins near the school route are attracting pests and contributing to poor hygiene.'
-  },
-  {
-    id: 'CIV-2026-1139',
-    title: 'Road damage near bus stop',
-    category: 'Road Damage',
-    location: 'Viman Nagar, Pune, Maharashtra',
-    submittedDate: '3 Sept 2026',
-    status: 'CATEGORIZED',
-    priority: 'HIGH',
-    matchScore: 93,
-    description: 'Multiple cracks and uneven surfaces near the bus station create safety concerns for commuters.'
-  },
-  {
-    id: 'CIV-2026-1125',
-    title: 'Public toilet maintenance issue',
-    category: 'Sanitation',
-    location: 'Camp, Pune, Maharashtra',
-    submittedDate: '1 Sept 2026',
-    status: 'ASSIGNED',
-    priority: 'MEDIUM',
-    matchScore: 82,
-    description: 'Lack of regular hygiene maintenance and broken fixtures at a heavily used public facility.'
-  }
-];
+import { apiFetch } from '../../lib/apiClient';
+import { mapProblemsToReports } from '../../lib/problemMapper';
 
 const FILTERS = ['All', 'Road Damage', 'Water Supply', 'Drainage', 'Waste Management', 'Street Light', 'Sanitation'];
 
@@ -91,9 +24,21 @@ export default function FindProblems() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [query, setQuery] = useState('');
+  const [problems, setProblems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const highPriorityCount = problems.filter((problem) => problem.priority === 'HIGH').length;
+
+  useEffect(() => {
+    apiFetch('/problems')
+      .then((response) => setProblems(mapProblemsToReports(response.data || [])))
+      .catch((loadError) => setError(loadError.message || 'Could not load civic problems.'))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const filteredProblems = useMemo(() => {
-    return DISCOVERY_PROBLEMS.filter((problem) => {
+    return problems.filter((problem) => {
       const matchesCategory = selectedCategory === 'All' || problem.category === selectedCategory;
       const matchesSearch =
         problem.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -101,9 +46,9 @@ export default function FindProblems() {
         problem.category.toLowerCase().includes(query.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, query]);
+  }, [problems, selectedCategory, query]);
 
-  const featuredProblem = filteredProblems[0] || DISCOVERY_PROBLEMS[0];
+  const featuredProblem = filteredProblems[0];
 
   const containerVariants = {
     hidden: { opacity: 0, y: 15 },
@@ -145,10 +90,10 @@ export default function FindProblems() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="MATCHED ISSUES" value="24" icon={Search} colorTheme="sky" highlightText="AI Matched" />
-        <StatCard label="ACTIVE FILTERS" value="06" icon={Filter} colorTheme="gold" highlightText="Live" />
-        <StatCard label="HIGH PRIORITY" value="09" icon={ShieldCheck} colorTheme="sky" highlightText="Urgent" />
-        <StatCard label="TEAM READINESS" value="82%" icon={Users} colorTheme="lemon" highlightText="Ready" />
+        <StatCard label="MATCHED ISSUES" value={String(problems.length)} icon={Search} colorTheme="sky" highlightText="AI Matched" />
+        <StatCard label="ACTIVE FILTERS" value={String(selectedCategory === 'All' ? 0 : 1)} icon={Filter} colorTheme="gold" highlightText="Live" />
+        <StatCard label="HIGH PRIORITY" value={String(highPriorityCount)} icon={ShieldCheck} colorTheme="sky" highlightText="Urgent" />
+        <StatCard label="TEAM READINESS" value="N/A" icon={Users} colorTheme="lemon" highlightText="Pending" />
       </div>
 
       <div className="premium-card rounded-2xl p-5 bg-white border border-slate-200/80">
@@ -195,10 +140,14 @@ export default function FindProblems() {
               <p className="text-xs text-slate-500">Best-fit civic issues for your university team</p>
             </div>
             <span className="text-xs font-mono font-bold text-[#006199] bg-[#8ACFF8]/15 px-2.5 py-1 rounded-md">
-              {filteredProblems.length} results
+              {isLoading ? 'Loading...' : `${filteredProblems.length} results`}
             </span>
           </div>
 
+          {error && <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
+          {!isLoading && !error && filteredProblems.length === 0 && (
+            <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">No matching problems are available.</p>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {filteredProblems.map((problem) => (
               <ReportCard
@@ -211,7 +160,7 @@ export default function FindProblems() {
         </div>
 
         <div className="space-y-5">
-          <div className="premium-card rounded-2xl overflow-hidden bg-white border border-slate-200/80">
+          {featuredProblem && <div className="premium-card rounded-2xl overflow-hidden bg-white border border-slate-200/80">
             <div className="relative h-44 bg-gradient-to-br from-[#006199] via-[#8ACFF8] to-[#F4EB6C]/50">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.35),transparent_35%)]" />
               <div className="absolute left-5 right-5 top-5 flex items-center justify-between">
@@ -229,7 +178,7 @@ export default function FindProblems() {
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#006199]">{featuredProblem.category}</span>
                 <div className="flex items-center text-[#006199] text-xs font-semibold">
                   <Star className="w-3.5 h-3.5 mr-1 fill-[#FFD444] text-[#FFD444]" />
-                  {featuredProblem.matchScore}% match
+                  {featuredProblem.matchScore === null ? 'Match score pending' : `${featuredProblem.matchScore}% match`}
                 </div>
               </div>
 
@@ -262,7 +211,7 @@ export default function FindProblems() {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
-          </div>
+          </div>}
         </div>
       </div>
     </motion.div>

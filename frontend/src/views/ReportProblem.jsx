@@ -20,6 +20,8 @@ import {
 import LocationPicker from '../components/LocationPicker';
 import FileUploader from '../components/FileUploader';
 import { CATEGORIES } from '../data/mockData';
+import { apiFetch } from '../lib/apiClient';
+import { mapProblemToReport } from '../lib/problemMapper';
 
 export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -34,6 +36,8 @@ export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
   });
 
   const [submittedReport, setSubmittedReport] = useState(null);
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const steps = [
     { num: '01', title: 'Problem Details' },
@@ -50,37 +54,35 @@ export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newReportId = `CIV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newReport = {
-      id: newReportId,
-      title: formData.title || "Reported Civic Problem",
-      category: formData.category,
-      location: formData.location.address,
-      landmark: formData.location.landmark,
-      submittedDate: "15 Sept 2026",
-      submittedTime: "10:00 AM",
-      lastUpdated: "Just Now",
-      status: "SUBMITTED",
-      priority: "HIGH",
-      department: "PMC Ward Action Cell",
-      description: formData.description || "Detailed problem report logged by citizen.",
-      media: formData.files,
-      timeline: [
-        { stage: 'SUBMITTED', label: '01 SUBMITTED', timestamp: 'Just Now', status: 'completed', desc: 'Report logged successfully.' },
-        { stage: 'CATEGORIZED', label: '02 CATEGORIZED', timestamp: 'Pending Triage', status: 'active', desc: 'Queued for AI categorization.' },
-        { stage: 'ASSIGNED', label: '03 ASSIGNED', timestamp: 'Pending', status: 'upcoming', desc: 'Department dispatch.' },
-        { stage: 'IN_PROGRESS', label: '04 IN PROGRESS', timestamp: 'Pending', status: 'upcoming', desc: 'Field inspection.' },
-        { stage: 'RESOLVED', label: '05 RESOLVED', timestamp: 'Pending', status: 'upcoming', desc: 'Resolution audit.' }
-      ],
-      activityLogs: [
-        { id: 1, date: '15 Sept 2026', time: '10:00 AM', text: 'Problem report submitted via Citizen Portal.', author: 'Citizen' }
-      ]
-    };
+    if (!formData.title.trim() || !formData.description.trim()) {
+      setSubmitError('Title and description are required before submitting.');
+      return;
+    }
 
-    setSubmittedReport(newReport);
-    onSubmitSuccess(newReport);
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const response = await apiFetch('/problems', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          category: formData.category,
+          location: `${formData.location.address}${formData.location.landmark ? `, ${formData.location.landmark}` : ''}`,
+        }),
+      });
+
+      const newReport = mapProblemToReport(response.data);
+      setSubmittedReport(newReport);
+      onSubmitSuccess(newReport);
+    } catch (error) {
+      setSubmitError(error.message || 'Unable to submit the problem.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submittedReport) {
@@ -191,6 +193,11 @@ export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
 
       {/* Form Container */}
       <div className="premium-card rounded-2xl p-6 bg-white border border-slate-200">
+        {submitError && (
+          <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {submitError}
+          </div>
+        )}
         <AnimatePresence mode="wait">
           {/* STEP 1: PROBLEM DETAILS */}
           {currentStep === 1 && (
@@ -365,10 +372,11 @@ export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
               whileTap={{ scale: 0.96 }}
               type="button"
               onClick={handleSubmit}
-              className="px-6 py-3 rounded-xl bg-[#FFD444] hover:bg-[#ffe066] text-[#003F66] font-extrabold text-xs flex items-center space-x-2 shadow-lg shadow-[#FFD444]/30"
+              disabled={isSubmitting}
+              className="px-6 py-3 rounded-xl bg-[#FFD444] hover:bg-[#ffe066] text-[#003F66] font-extrabold text-xs flex items-center space-x-2 shadow-lg shadow-[#FFD444]/30 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Send className="w-4 h-4 text-[#006199]" />
-              <span>Submit Report Now</span>
+              <span>{isSubmitting ? 'Submitting...' : 'Submit Report Now'}</span>
             </motion.button>
           )}
         </div>

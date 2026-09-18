@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -15,67 +15,43 @@ import {
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import StatusBadge from '../../components/StatusBadge';
+import { apiFetch } from '../../lib/apiClient';
+import { useAuth } from '../../hooks/useAuth';
 
-const MY_PROJECTS_STATS = {
-  activeProjects: 6,
-  teamMembers: 24,
-  milestonesDue: 3,
-  solutionsReady: 2
-};
-
-const MY_PROJECTS = [
-  {
-    id: 'PRJ-2041',
-    title: 'Smart Drainage Monitoring',
-    category: 'Water Management',
-    location: 'Baner, Pune',
-    submittedDate: '12 Sept 2026',
-    status: 'IN PROGRESS',
-    progress: 72,
-    teamName: 'Urban Flow Lab',
-    dueDate: '18 Oct 2026',
-    description: 'Deploying a low-cost monitoring model to identify overflow risks and prioritize city maintenance work during monsoon.',
-    members: ['AK', 'RS', 'DP', 'AN'],
-    milestone: 'Pilot deployment review'
-  },
-  {
-    id: 'PRJ-1988',
-    title: 'Waste Segregation Awareness Drive',
-    category: 'Solid Waste',
-    location: 'Kothrud, Pune',
-    submittedDate: '5 Sept 2026',
-    status: 'ASSIGNED',
-    progress: 46,
-    teamName: 'Green Campus Collective',
-    dueDate: '7 Nov 2026',
-    description: 'Planning resident engagement and field survey coverage across 4 wards with visible intervention strategies and volunteer reporting.',
-    members: ['MP', 'SR', 'NE'],
-    milestone: 'Ward audit completed'
-  },
-  {
-    id: 'PRJ-1917',
-    title: 'Street Safety Audit',
-    category: 'Public Safety',
-    location: 'Shivajinagar, Pune',
-    submittedDate: '27 Aug 2026',
-    status: 'RESOLVED',
-    progress: 100,
-    teamName: 'Safe Routes Unit',
-    dueDate: 'Completed',
-    description: 'Finalized lighting, crossing, and signage improvements after a successful academic-community collaboration and site review.',
-    members: ['VM', 'IG', 'PK', 'TT'],
-    milestone: 'Final report submitted'
-  }
-];
-
-const MILESTONES = [
-  { label: 'Innovation review', due: 'Today', status: 'Due Soon' },
-  { label: 'Community field visit', due: '3 days', status: 'Planned' },
-  { label: 'Prototype validation', due: '1 week', status: 'Pending' }
-];
+const mapSolutionToProject = (solution) => ({
+  ...solution,
+  id: solution.id,
+  title: solution.title || 'Untitled solution',
+  category: solution.category || 'Civic Innovation',
+  location: solution.location || 'Location unavailable',
+  status: String(solution.status || 'submitted').replace(/_/g, ' ').toUpperCase(),
+  progress: Number(solution.progress) || 0,
+  teamName: solution.team_name || 'Team not specified',
+  dueDate: solution.due_date ? new Date(solution.due_date).toLocaleDateString('en-IN') : 'Not assigned',
+  description: solution.description || 'No solution description provided.',
+  members: solution.members || [],
+});
 
 export default function MyProjects() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
+  const [projects, setProjects] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    apiFetch(`/solutions?university_id=${encodeURIComponent(profile.id)}`)
+      .then((response) => setProjects((response.data || []).map(mapSolutionToProject)))
+      .catch((loadError) => setError(loadError.message || 'Could not load projects.'))
+      .finally(() => setIsLoading(false));
+  }, [profile?.id]);
+
+  const activeProjects = projects.filter((project) => !['COMPLETED', 'RESOLVED'].includes(project.status));
+  const solutionsReady = projects.filter((project) => ['COMPLETED', 'RESOLVED'].includes(project.status)).length;
+  const teamNames = new Set(projects.map((project) => project.teamName).filter((team) => team !== 'Team not specified'));
+  const milestones = projects.filter((project) => project.dueDate !== 'Not assigned').slice(0, 3);
 
   const containerVariants = {
     hidden: { opacity: 0, y: 15 },
@@ -121,28 +97,28 @@ export default function MyProjects() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="ACTIVE PROJECTS"
-          value={String(MY_PROJECTS_STATS.activeProjects)}
+          value={String(activeProjects.length)}
           icon={FolderKanban}
           colorTheme="sky"
           highlightText="Live"
         />
         <StatCard
-          label="TEAM MEMBERS"
-          value={String(MY_PROJECTS_STATS.teamMembers)}
+          label="ACTIVE TEAMS"
+          value={String(teamNames.size)}
           icon={Users}
           colorTheme="gold"
           highlightText="Engaged"
         />
         <StatCard
           label="MILESTONES DUE"
-          value={String(MY_PROJECTS_STATS.milestonesDue)}
+          value={String(milestones.length)}
           icon={CalendarRange}
           colorTheme="sky"
           highlightText="This Month"
         />
         <StatCard
           label="SOLUTIONS READY"
-          value={String(MY_PROJECTS_STATS.solutionsReady)}
+          value={String(solutionsReady)}
           icon={CheckCheck}
           colorTheme="lemon"
           highlightText="Prepared"
@@ -156,33 +132,33 @@ export default function MyProjects() {
             <p className="text-xs text-slate-500">Distribution of project progress across your university teams</p>
           </div>
           <span className="text-xs font-mono font-bold text-[#006199] bg-[#8ACFF8]/20 px-2.5 py-1 rounded-md">
-            Portfolio Score: 76%
+            Portfolio Score: {projects.length ? `${Math.round((solutionsReady / projects.length) * 100)}%` : 'N/A'}
           </span>
         </div>
 
         <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex p-0.5 space-x-1">
-          <div className="h-full bg-[#006199] rounded-l-full w-[35%]" title="Ongoing (35%)" />
-          <div className="h-full bg-[#8ACFF8] w-[25%]" title="In Review (25%)" />
-          <div className="h-full bg-[#FFD444] w-[25%]" title="Milestones (25%)" />
-          <div className="h-full bg-emerald-500 rounded-r-full w-[15%]" title="Completed (15%)" />
+          <div className="h-full bg-[#006199] rounded-l-full" style={{ width: `${projects.length ? (activeProjects.length / projects.length) * 100 : 0}%` }} title="Ongoing" />
+          <div className="h-full bg-[#8ACFF8]" style={{ width: `${projects.length ? (milestones.length / projects.length) * 100 : 0}%` }} title="In Review" />
+          <div className="h-full bg-[#FFD444]" style={{ width: `${projects.length ? (activeProjects.length / projects.length) * 100 : 0}%` }} title="Milestones" />
+          <div className="h-full bg-emerald-500 rounded-r-full" style={{ width: `${projects.length ? (solutionsReady / projects.length) * 100 : 0}%` }} title="Completed" />
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-3 border-t border-slate-100 text-xs">
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-[#006199]" />
-            <span className="text-slate-600 font-medium">Ongoing (2)</span>
+            <span className="text-slate-600 font-medium">Ongoing ({activeProjects.length})</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-[#8ACFF8]" />
-            <span className="text-slate-600 font-medium">Review (1)</span>
+            <span className="text-slate-600 font-medium">Review ({milestones.length})</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-[#FFD444]" />
-            <span className="text-slate-600 font-medium">Milestones (2)</span>
+            <span className="text-slate-600 font-medium">Milestones ({milestones.length})</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span className="text-slate-600 font-medium">Closed (1)</span>
+            <span className="text-slate-600 font-medium">Closed ({solutionsReady})</span>
           </div>
         </div>
       </div>
@@ -203,7 +179,10 @@ export default function MyProjects() {
             </button>
           </div>
 
-          {MY_PROJECTS.map((project) => (
+          {isLoading && <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Loading projects...</p>}
+          {error && <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
+          {!isLoading && !error && projects.length === 0 && <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">No projects found for this university.</p>}
+          {projects.map((project) => (
             <motion.div
               key={project.id}
               layout
@@ -283,7 +262,7 @@ export default function MyProjects() {
                 </div>
 
                 <button
-                  onClick={() => navigate(`/university/problems/${project.id}`)}
+                  onClick={() => navigate(`/university/problems/${project.problem_id || project.id}`)}
                   className="inline-flex items-center justify-center space-x-2 rounded-xl border border-[#006199]/20 bg-[#006199]/5 px-3.5 py-2 text-xs font-bold text-[#006199] hover:bg-[#8ACFF8]/20 transition-colors"
                 >
                   <span>Open Details</span>
@@ -305,15 +284,15 @@ export default function MyProjects() {
             </div>
 
             <div className="space-y-3">
-              {MILESTONES.map((item) => (
-                <div key={item.label} className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+              {milestones.map((item) => (
+                <div key={item.id} className="rounded-xl bg-slate-50 border border-slate-100 p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-bold text-sm text-slate-800">{item.label}</p>
+                    <p className="font-bold text-sm text-slate-800">{item.title}</p>
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#003F66] bg-[#F4EB6C]/60 px-2 py-1 rounded-full">
                       {item.status}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">Due in {item.due}</p>
+                  <p className="mt-2 text-xs text-slate-500">Due date: {item.dueDate}</p>
                 </div>
               ))}
             </div>
@@ -331,15 +310,15 @@ export default function MyProjects() {
             <div className="space-y-3">
               <div className="rounded-xl bg-[#8ACFF8]/15 border border-[#8ACFF8]/30 p-3">
                 <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#006199]">Faculty Mentor</p>
-                <p className="mt-1 font-bold text-slate-800">Dr. Meera Kulkarni</p>
+                <p className="mt-1 font-bold text-slate-800">{profile?.profile_data?.mentor || 'Not assigned'}</p>
               </div>
               <div className="rounded-xl bg-[#FFD444]/15 border border-[#FFD444]/40 p-3">
                 <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#003F66]">Industry Partner</p>
-                <p className="mt-1 font-bold text-slate-800">Urban Systems Pvt. Ltd.</p>
+                <p className="mt-1 font-bold text-slate-800">{profile?.profile_data?.industry_partner || 'Not assigned'}</p>
               </div>
               <div className="rounded-xl bg-[#F4EB6C]/30 border border-[#F4EB6C] p-3">
                 <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#003F66]">Research Grants</p>
-                <p className="mt-1 font-bold text-slate-800">₹4.2L sanctioned</p>
+                <p className="mt-1 font-bold text-slate-800">{profile?.profile_data?.research_grants || 'Not assigned'}</p>
               </div>
             </div>
           </div>

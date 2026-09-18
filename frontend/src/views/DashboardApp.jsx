@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav';
 import CitizenDashboard from './CitizenDashboard';
@@ -7,11 +7,37 @@ import MyReports from './MyReports';
 import NotificationsView from './NotificationsView';
 import ProfileView from './ProfileView';
 import ProblemDetail from './ProblemDetail';
-import { INITIAL_REPORTS } from '../data/mockData';
+import { apiFetch } from '../lib/apiClient';
+import { mapProblemsToReports } from '../lib/problemMapper';
+import { useAuth } from '../hooks/useAuth';
 
 export default function DashboardApp() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedReportId, setSelectedReportId] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [isLoadingReports, setIsLoadingReports] = useState(true);
+  const [reportsError, setReportsError] = useState('');
+
+  const loadReports = async () => {
+    if (!user?.id) return;
+
+    setIsLoadingReports(true);
+    setReportsError('');
+
+    try {
+      const response = await apiFetch(`/problems?citizen_id=${encodeURIComponent(user.id)}`);
+      setReports(mapProblemsToReports(response.data || []));
+    } catch (error) {
+      setReportsError(error.message || 'Could not load your reports.');
+    } finally {
+      setIsLoadingReports(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReports();
+  }, [user?.id]);
 
   const handleNavigate = (tab) => {
     setSelectedReportId(null);
@@ -27,7 +53,7 @@ export default function DashboardApp() {
     if (activeTab === 'report-detail' && selectedReportId) {
       return (
         <ProblemDetail
-          reportId={selectedReportId}
+          report={reports.find((report) => report.id === selectedReportId)}
           onBack={() => handleNavigate('my-reports')}
         />
       );
@@ -36,18 +62,28 @@ export default function DashboardApp() {
       case 'dashboard':
         return (
           <CitizenDashboard
-            reports={INITIAL_REPORTS}
+            reports={reports}
+            isLoading={isLoadingReports}
+            error={reportsError}
             onNavigate={handleNavigate}
             onSelectReport={handleSelectReport}
           />
         );
       case 'report':
-        return <ReportProblem onSubmitSuccess={() => handleNavigate('my-reports')} />;
+        return (
+          <ReportProblem
+            onSubmitSuccess={(newReport) => {
+              setReports((currentReports) => [newReport, ...currentReports]);
+              handleNavigate('my-reports');
+            }}
+          />
+        );
       case 'my-reports':
         return (
           <MyReports
-            reports={INITIAL_REPORTS}
+            reports={reports}
             onSelectReport={handleSelectReport}
+            onNavigate={handleNavigate}
           />
         );
       case 'notifications':
@@ -57,7 +93,9 @@ export default function DashboardApp() {
       default:
         return (
           <CitizenDashboard
-            reports={INITIAL_REPORTS}
+            reports={reports}
+            isLoading={isLoadingReports}
+            error={reportsError}
             onNavigate={handleNavigate}
             onSelectReport={handleSelectReport}
           />

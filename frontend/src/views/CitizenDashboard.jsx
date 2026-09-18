@@ -15,8 +15,9 @@ import StatCard from '../components/StatCard';
 import ReportCard from '../components/ReportCard';
 import StatusBadge from '../components/StatusBadge';
 
-export default function CitizenDashboard({ reports = [], onNavigate, onSelectReport }) {
+export default function CitizenDashboard({ reports = [], isLoading = false, error = '', onNavigate, onSelectReport }) {
   const recentReports = reports.slice(0, 3);
+  const statusCount = (status) => reports.filter((report) => report.status === status).length;
 
   // Stagger animation container
   const containerVariants = {
@@ -65,28 +66,28 @@ export default function CitizenDashboard({ reports = [], onNavigate, onSelectRep
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="TOTAL REPORTS"
-          value="12"
+          value={String(reports.length)}
           icon={FileText}
           colorTheme="sky"
           highlightText="100% Verified"
         />
         <StatCard
           label="IN PROGRESS"
-          value="4"
+          value={String(statusCount('IN PROGRESS'))}
           icon={Clock}
           colorTheme="gold"
           highlightText="Active Repair"
         />
         <StatCard
           label="RESOLVED"
-          value="7"
+          value={String(statusCount('RESOLVED'))}
           icon={CheckCircle2}
           colorTheme="sky"
           highlightText="87.5% Closed"
         />
         <StatCard
           label="PENDING"
-          value="1"
+          value={String(statusCount('PENDING') + statusCount('SUBMITTED'))}
           icon={AlertCircle}
           colorTheme="lemon"
           highlightText="Queued"
@@ -150,13 +151,28 @@ export default function CitizenDashboard({ reports = [], onNavigate, onSelectRep
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {recentReports.map((report) => (
+            {isLoading && (
+              <div className="md:col-span-3 rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+                Loading your reports...
+              </div>
+            )}
+            {!isLoading && error && (
+              <div className="md:col-span-3 rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-sm text-red-700">
+                {error}
+              </div>
+            )}
+            {!isLoading && !error && recentReports.map((report) => (
             <ReportCard
               key={report.id}
               report={report}
               onClick={() => onSelectReport(report.id)}
             />
           ))}
+            {!isLoading && !error && recentReports.length === 0 && (
+              <div className="md:col-span-3 rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+                No reports submitted yet.
+              </div>
+            )}
         </div>
       </div>
 

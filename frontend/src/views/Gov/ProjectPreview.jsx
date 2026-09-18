@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileSearch } from 'lucide-react';
-import { MONITORED_PROJECTS } from '../../data/governmentMockData';
+import { apiFetch } from '../../lib/apiClient';
+import { mapProblemToReport } from '../../lib/problemMapper';
 
 export default function ProjectPreview() {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const project = MONITORED_PROJECTS.find((p) => p.id === projectId);
+  const [project, setProject] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    apiFetch(`/problems/${projectId}`)
+      .then((response) => setProject(mapProblemToReport(response.data)))
+      .catch((loadError) => setError(loadError.message || 'Could not load project.'));
+  }, [projectId]);
 
   return (
     <div className="max-w-3xl mx-auto mt-8">
@@ -26,9 +34,7 @@ export default function ProjectPreview() {
           {project ? project.title : `Project ${projectId}`}
         </h2>
         <p className="text-xs font-mono text-slate-400 mb-4">{projectId}</p>
-        <p className="text-sm text-slate-500">
-          Full project detail + verify/monitor actions + chat — build this next, reusing the shared Problem Detail pattern.
-        </p>
+        {error ? <p className="text-sm text-red-700">{error}</p> : <p className="text-sm text-slate-500">{project?.description || 'Loading project details...'}</p>}
       </div>
     </div>
   );

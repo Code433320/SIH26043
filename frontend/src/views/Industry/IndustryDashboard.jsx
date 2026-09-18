@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,15 +12,46 @@ import {
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import ReportCard from '../../components/ReportCard';
-import {
-  INDUSTRY_PROFILE,
-  INDUSTRY_DASHBOARD_STATS,
-  EXPLORABLE_SOLUTIONS
-} from '../../data/industryMockData';
+import { apiFetch } from '../../lib/apiClient';
+import { useAuth } from '../../hooks/useAuth';
+
+const mapSolution = (solution) => ({
+  ...solution,
+  category: solution.category || 'Civic Innovation',
+  location: solution.team_name || 'University team',
+  submittedDate: solution.created_at
+    ? new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(solution.created_at))
+    : 'Recently',
+  status: String(solution.status || 'submitted').replace(/_/g, ' ').toUpperCase(),
+});
 
 export default function IndustryDashboard() {
   const navigate = useNavigate();
-  const recentSolutions = EXPLORABLE_SOLUTIONS.slice(0, 3);
+  const { profile } = useAuth();
+  const [solutions, setSolutions] = useState([]);
+  const [engagements, setEngagements] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    Promise.all([apiFetch('/solutions'), apiFetch('/engagements')])
+      .then(([solutionsResponse, engagementsResponse]) => {
+        setSolutions((solutionsResponse.data || []).map(mapSolution));
+        setEngagements(engagementsResponse.data || []);
+      })
+      .catch((loadError) => setError(loadError.message || 'Could not load industry dashboard data.'));
+  }, []);
+
+  const recentSolutions = solutions.slice(0, 3);
+  const activeEngagements = engagements.filter((item) => ['pending', 'active'].includes(item.status));
+  const fundedProjects = engagements.filter((item) => item.type === 'funding' && item.status !== 'rejected');
+  const universityPartners = new Set(solutions.map((solution) => solution.university_id).filter(Boolean));
+  const engagementTotal = engagements.length || 1;
+  const stageCounts = {
+    reviewing: engagements.filter((item) => item.status === 'pending').length,
+    active: engagements.filter((item) => item.status === 'active' && item.type === 'mentorship').length,
+    funding: engagements.filter((item) => item.status === 'active' && item.type === 'funding').length,
+    delivered: engagements.filter((item) => item.status === 'completed').length,
+  };
 
   const containerVariants = {
     hidden: { opacity: 0, y: 15 },
@@ -46,7 +77,7 @@ export default function IndustryDashboard() {
             <span>Civic Samadhan Portal • Industry Collaboration</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Welcome back, {INDUSTRY_PROFILE.name}.
+            Welcome back, {profile?.name || 'Industry Partner'}.
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Here's what's happening with your funded projects and mentorships.
@@ -68,28 +99,28 @@ export default function IndustryDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="SOLUTIONS EXPLORED"
-          value={String(INDUSTRY_DASHBOARD_STATS.exploredSolutions)}
+          value={String(solutions.length)}
           icon={Compass}
           colorTheme="sky"
           highlightText="Browsed"
         />
         <StatCard
           label="ACTIVE ENGAGEMENTS"
-          value={String(INDUSTRY_DASHBOARD_STATS.activeEngagements)}
+          value={String(activeEngagements.length)}
           icon={Handshake}
           colorTheme="gold"
           highlightText="Ongoing"
         />
         <StatCard
           label="FUNDED PROJECTS"
-          value={String(INDUSTRY_DASHBOARD_STATS.fundedProjects)}
+          value={String(fundedProjects.length)}
           icon={Award}
           colorTheme="sky"
           highlightText="Supported"
         />
         <StatCard
           label="UNIVERSITY PARTNERS"
-          value={String(INDUSTRY_DASHBOARD_STATS.universityPartners)}
+          value={String(universityPartners.size)}
           icon={Building2}
           colorTheme="lemon"
           highlightText="Collaborating"
@@ -105,33 +136,33 @@ export default function IndustryDashboard() {
           </div>
           <span className="text-xs font-mono font-bold text-[#006199] bg-[#8ACFF8]/20 px-2.5 py-1 rounded-md flex items-center gap-1">
             <TrendingUp className="w-3.5 h-3.5" />
-            Avg Response: {INDUSTRY_DASHBOARD_STATS.avgResponseDays} Days
+            Avg Response: N/A
           </span>
         </div>
 
         <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex p-0.5 space-x-1">
-          <div className="h-full bg-[#006199] rounded-l-full w-[20%]" title="Reviewing (20%)" />
-          <div className="h-full bg-[#8ACFF8] w-[30%]" title="Mentorship Active (30%)" />
-          <div className="h-full bg-[#FFD444] w-[25%]" title="Funding Committed (25%)" />
-          <div className="h-full bg-emerald-500 rounded-r-full w-[25%]" title="Delivered (25%)" />
+          <div className="h-full bg-[#006199] rounded-l-full" style={{ width: `${(stageCounts.reviewing / engagementTotal) * 100}%` }} title="Reviewing" />
+          <div className="h-full bg-[#8ACFF8]" style={{ width: `${(stageCounts.active / engagementTotal) * 100}%` }} title="Mentorship Active" />
+          <div className="h-full bg-[#FFD444]" style={{ width: `${(stageCounts.funding / engagementTotal) * 100}%` }} title="Funding Committed" />
+          <div className="h-full bg-emerald-500 rounded-r-full" style={{ width: `${(stageCounts.delivered / engagementTotal) * 100}%` }} title="Delivered" />
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-3 border-t border-slate-100 text-xs">
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-[#006199]" />
-            <span className="text-slate-600 font-medium">Reviewing (1)</span>
+            <span className="text-slate-600 font-medium">Reviewing ({stageCounts.reviewing})</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-[#8ACFF8]" />
-            <span className="text-slate-600 font-medium">Mentorship (1)</span>
+            <span className="text-slate-600 font-medium">Mentorship ({stageCounts.active})</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-[#FFD444]" />
-            <span className="text-slate-600 font-medium">Funding (1)</span>
+            <span className="text-slate-600 font-medium">Funding ({stageCounts.funding})</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span className="text-slate-600 font-medium">Delivered (1)</span>
+            <span className="text-slate-600 font-medium">Delivered ({stageCounts.delivered})</span>
           </div>
         </div>
       </div>
@@ -147,11 +178,13 @@ export default function IndustryDashboard() {
             onClick={() => navigate('/industry/explore-solutions')}
             className="text-xs font-bold text-[#006199] hover:underline flex items-center space-x-1"
           >
-            <span>View All ({EXPLORABLE_SOLUTIONS.length})</span>
+            <span>View All ({solutions.length})</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
+        {error && <p className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
+        {!error && recentSolutions.length === 0 && <p className="mb-4 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">No live solutions are available yet.</p>}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {recentSolutions.map((solution) => (
             <ReportCard

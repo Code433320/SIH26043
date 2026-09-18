@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileSearch } from 'lucide-react';
-import { EXPLORABLE_SOLUTIONS } from '../../data/industryMockData';
+import { apiFetch } from '../../lib/apiClient';
 
 export default function SolutionPreview() {
   const { solutionId } = useParams();
   const navigate = useNavigate();
-  const solution = EXPLORABLE_SOLUTIONS.find((s) => s.id === solutionId);
+  const [solution, setSolution] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    apiFetch(`/solutions/${solutionId}`)
+      .then((response) => setSolution(response.data))
+      .catch((loadError) => setError(loadError.message || 'Could not load solution.'));
+  }, [solutionId]);
 
   return (
     <div className="max-w-3xl mx-auto mt-8">
@@ -26,9 +33,7 @@ export default function SolutionPreview() {
           {solution ? solution.title : `Solution ${solutionId}`}
         </h2>
         <p className="text-xs font-mono text-slate-400 mb-4">{solutionId}</p>
-        <p className="text-sm text-slate-500">
-          Full solution detail + fund/mentor actions + chat — build this next, reusing the shared Problem Detail pattern.
-        </p>
+        {error ? <p className="text-sm text-red-700">{error}</p> : <p className="text-sm text-slate-500">{solution?.description || 'Loading solution details...'}</p>}
       </div>
     </div>
   );

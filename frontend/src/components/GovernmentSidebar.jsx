@@ -9,7 +9,7 @@ import {
   Landmark,
   ChevronRight
 } from 'lucide-react';
-import { GOVERNMENT_PROFILE } from '../data/governmentMockData';
+import { useAuth } from '../hooks/useAuth';
 
 const navItems = [
   { to: '/government/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -19,6 +19,7 @@ const navItems = [
 ];
 
 export default function GovernmentSidebar() {
+  const { profile } = useAuth();
   return (
     <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between h-screen sticky top-0 z-30 select-none hidden lg:flex">
       <div>
@@ -89,15 +90,15 @@ export default function GovernmentSidebar() {
           <div className="flex items-center space-x-3 min-w-0">
             <img
               src={GOVERNMENT_PROFILE.avatarUrl}
-              alt={GOVERNMENT_PROFILE.name}
+              alt={profile?.name || 'Government'}
               className="w-9 h-9 rounded-full object-cover border border-[#006199]/20 flex-shrink-0"
             />
             <div className="min-w-0">
               <p className="text-xs font-bold text-slate-900 truncate leading-tight">
-                {GOVERNMENT_PROFILE.name}
+                {profile?.name || 'Government'}
               </p>
               <p className="text-[10px] font-mono text-slate-500 truncate mt-0.5">
-                {GOVERNMENT_PROFILE.departmentId}
+                {profile?.id || 'Government account'}
               </p>
             </div>
           </div>

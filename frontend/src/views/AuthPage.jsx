@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import {
-  Users, ShieldCheck, Building2, GraduationCap, HeartHandshake,
-  ArrowLeft, ArrowRight, Eye, EyeOff, CheckCircle2, Loader2, Clock, Lock
+  Users, ShieldCheck, Building2, HeartHandshake,
+  ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Clock
 } from 'lucide-react';
 
 // ── 5 Roles matching exact spec ─────────────────────────────────
@@ -38,17 +39,7 @@ const ROLES = [
     route: '/university',
   },
   {
-    id: 'student',
-    label: 'Student',
-    tagline: 'Join a project team and get real-world experience',
-    icon: GraduationCap,
-    photo: '/auth_student.jpg',
-    valueStatement: 'Real problems. Real teams. Real impact — not a hypothetical case study.',
-    requiresApproval: false,
-    route: '/university/find-problems',
-  },
-  {
-    id: 'ngo',
+    id: 'industry',
     label: 'NGO / Private Funder',
     tagline: 'Fund, support, or field-verify real impact',
     icon: HeartHandshake,
@@ -59,9 +50,19 @@ const ROLES = [
   },
 ];
 
+const roleRoutes = {
+  citizen: '/app',
+  government: '/government',
+  university: '/university',
+  student: '/university',
+  industry: '/industry',
+  ngo: '/industry',
+};
+
 export default function AuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const initialRoleParam = searchParams.get('role');
 
   const [selectedRole, setSelectedRole] = useState(
@@ -71,6 +72,8 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Form states per role
   const [formData, setFormData] = useState({
@@ -112,26 +115,56 @@ export default function AuthPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
 
-    setTimeout(() => {
-      setLoading(false);
-      if (authMode === 'signup' && activeRole?.requiresApproval) {
-        setShowApprovalModal(true);
-      } else {
-        navigate(activeRole?.route || '/app');
-      }
-    }, 1100);
+    const { password: _password, ...profileData } = formData;
+
+    const result = authMode === 'signin'
+      ? await signIn({ email: formData.email.trim(), password: formData.password })
+      : await signUp({
+          email: formData.email.trim(),
+          password: formData.password,
+          name: formData.name,
+          role: activeRole.id,
+          profileData,
+        });
+
+    setLoading(false);
+
+    if (result.error) {
+      setErrorMessage(result.error.message || 'Authentication failed. Please try again.');
+      return;
+    }
+
+    if (authMode === 'signup' && !result.data?.session) {
+      setSuccessMessage('Account created. Check your email to confirm the account before signing in.');
+      return;
+    }
+
+    if (authMode === 'signup' && activeRole?.requiresApproval) {
+      setShowApprovalModal(true);
+      return;
+    }
+
+    const authenticatedRole = result.profile?.role || activeRole?.id;
+    const redirectPath = roleRoutes[authenticatedRole] || '/app';
+    navigate(redirectPath, { replace: true });
   };
 
-  const handleGoogleAuth = () => {
+  const handleGoogleAuth = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigate(activeRole?.route || '/app');
-    }, 900);
+    setErrorMessage('');
+
+    const { error } = await signInWithGoogle();
+    setLoading(false);
+
+    if (error) {
+      setErrorMessage(error.message || 'Google authentication failed.');
+    }
   };
 
   return (
@@ -282,6 +315,18 @@ export default function AuthPage() {
                   )}
                 </button>
               </div>
+
+              {errorMessage && (
+                <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {errorMessage}
+                </div>
+              )}
+
+              {successMessage && (
+                <div role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {successMessage}
+                </div>
+              )}
 
               {/* Auth Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -530,15 +575,15 @@ export default function AuthPage() {
                 {/* Email or Phone field */}
                 <div>
                   <label className="block text-xs font-bold text-[#14213D] uppercase tracking-wider mb-1.5">
-                    {activeRole.id === 'government' ? 'Official Government Email' : 'Email or Phone'}
+                    {activeRole.id === 'government' ? 'Official Government Email' : 'Email'}
                   </label>
                   <input
-                    type="text"
+                    type="email"
                     required
                     placeholder={
                       activeRole.id === 'government'
                         ? 'officer@gov.in or dept@nic.in'
-                        : 'you@example.com or +91 98765 43210'
+                        : 'you@example.com'
                     }
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
@@ -637,7 +682,7 @@ export default function AuthPage() {
           </section>
 
           {/* ── RIGHT PANEL: Real Photography with Indian Civic Context (50% on desktop) ── */}
-          <section className="relative w-full lg:w-1/2 min-h-[340px] lg:min-h-auto overflow-hidden animate-[fadeInRight_0.35s_ease-out]">
+          <section className="relative w-full lg:w-1/2 min-h-85 lg:min-h-auto overflow-hidden animate-[fadeInRight_0.35s_ease-out]">
             
             {/* Thin Signal Orange Accent Bar along inner edge (the seam) */}
             <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-[#E8590C] z-20 hidden lg:block" />
@@ -650,7 +695,7 @@ export default function AuthPage() {
             />
 
             {/* Subtle Navy Gradient Overlay at bottom third */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#14213D]/95 via-[#14213D]/45 to-transparent z-10" />
+            <div className="absolute inset-0 bg-linear-to-t from-[#14213D]/95 via-[#14213D]/45 to-transparent z-10" />
 
             {/* Overlaid Role Value Statement */}
             <div className="absolute bottom-10 left-8 right-8 z-20 max-w-lg">

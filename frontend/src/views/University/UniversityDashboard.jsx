@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,15 +12,79 @@ import {
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import ReportCard from '../../components/ReportCard';
-import {
-  UNIVERSITY_PROFILE,
-  UNIVERSITY_DASHBOARD_STATS,
-  MATCHED_PROBLEMS
-} from '../../data/uniMockData'
+import { apiFetch } from '../../lib/apiClient';
+import { mapProblemsToReports } from '../../lib/problemMapper';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function UniversityDashboard() {
   const navigate = useNavigate();
-  const recentMatches = MATCHED_PROBLEMS.slice(0, 3);
+  const { profile } = useAuth();
+  const [recentMatches, setRecentMatches] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState({
+    matchedProblems: 0,
+    activeTeams: 0,
+    solutionsSubmitted: 0,
+    industryPartners: 0,
+    avgTeamFormationDays: 'N/A',
+  });
+  const [pipeline, setPipeline] = useState({
+    matched: 0,
+    teamFormed: 0,
+    inProgress: 0,
+    submitted: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState('');
+
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    const loadDashboard = async () => {
+      setIsLoading(true);
+      setDashboardError('');
+
+      try {
+        const [problemsResponse, solutionsResponse] = await Promise.all([
+          apiFetch(`/problems?university_id=${encodeURIComponent(profile.id)}`),
+          apiFetch(`/solutions?university_id=${encodeURIComponent(profile.id)}`),
+        ]);
+
+        const problems = mapProblemsToReports(problemsResponse.data || []);
+        const solutions = solutionsResponse.data || [];
+        const activeSolutions = solutions.filter((solution) =>
+          ['submitted', 'under_review', 'in_progress'].includes(solution.status)
+        );
+        const teamNames = new Set(
+          activeSolutions.map((solution) => solution.team_name).filter(Boolean)
+        );
+        const pipelineCounts = {
+          matched: problems.filter((problem) => ['PENDING', 'CATEGORIZED'].includes(problem.status)).length,
+          teamFormed: problems.filter((problem) => problem.status === 'ASSIGNED').length,
+          inProgress: problems.filter((problem) => problem.status === 'IN PROGRESS').length,
+          submitted: solutions.filter((solution) => solution.status === 'submitted' || solution.status === 'completed').length,
+        };
+
+        setRecentMatches(problems.slice(0, 3));
+        setDashboardStats({
+          matchedProblems: problems.length,
+          activeTeams: teamNames.size,
+          solutionsSubmitted: solutions.length,
+          industryPartners: 0,
+          avgTeamFormationDays: 'N/A',
+        });
+        setPipeline(pipelineCounts);
+      } catch (error) {
+        setDashboardError(error.message || 'Could not load university dashboard data.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, [profile?.id]);
+
+  const pipelineTotal = Object.values(pipeline).reduce((total, count) => total + count, 0) || 1;
+  const pipelineWidth = (count) => `${(count / pipelineTotal) * 100}%`;
 
   const containerVariants = {
     hidden: { opacity: 0, y: 15 },
@@ -46,7 +110,7 @@ export default function UniversityDashboard() {
             <span>Civic Samadhan Portal • University Collaboration</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Welcome back, {UNIVERSITY_PROFILE.name.split(',')[0]}.
+            Welcome back, {profile?.name || 'University'}.
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Here's what's happening with your matched problems and active teams.
@@ -68,28 +132,28 @@ export default function UniversityDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="MATCHED PROBLEMS"
-          value={String(UNIVERSITY_DASHBOARD_STATS.matchedProblems)}
+          value={String(dashboardStats.matchedProblems)}
           icon={Search}
           colorTheme="sky"
           highlightText="AI Matched"
         />
         <StatCard
           label="ACTIVE TEAMS"
-          value={String(UNIVERSITY_DASHBOARD_STATS.activeTeams)}
+          value={String(dashboardStats.activeTeams)}
           icon={Users}
           colorTheme="gold"
           highlightText="In Progress"
         />
         <StatCard
           label="SOLUTIONS SUBMITTED"
-          value={String(UNIVERSITY_DASHBOARD_STATS.solutionsSubmitted)}
+          value={String(dashboardStats.solutionsSubmitted)}
           icon={FileCheck2}
           colorTheme="sky"
           highlightText="Delivered"
         />
         <StatCard
           label="INDUSTRY PARTNERS"
-          value={String(UNIVERSITY_DASHBOARD_STATS.industryPartners)}
+          value={String(dashboardStats.industryPartners)}
           icon={Handshake}
           colorTheme="lemon"
           highlightText="Collaborating"
@@ -104,33 +168,33 @@ export default function UniversityDashboard() {
             <p className="text-xs text-slate-500">Distribution of matched problems across your teams</p>
           </div>
           <span className="text-xs font-mono font-bold text-[#006199] bg-[#8ACFF8]/20 px-2.5 py-1 rounded-md">
-            Avg Team Formation: {UNIVERSITY_DASHBOARD_STATS.avgTeamFormationDays} Days
+            Avg Team Formation: {dashboardStats.avgTeamFormationDays}
           </span>
         </div>
 
         <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex p-0.5 space-x-1">
-          <div className="h-full bg-[#006199] rounded-l-full w-[25%]" title="Matched (25%)" />
-          <div className="h-full bg-[#8ACFF8] w-[25%]" title="Team Formed (25%)" />
-          <div className="h-full bg-[#FFD444] w-[30%]" title="In Progress (30%)" />
-          <div className="h-full bg-emerald-500 rounded-r-full w-[20%]" title="Solution Submitted (20%)" />
+          <div className="h-full bg-[#006199] rounded-l-full" style={{ width: pipelineWidth(pipeline.matched) }} title="Matched" />
+          <div className="h-full bg-[#8ACFF8]" style={{ width: pipelineWidth(pipeline.teamFormed) }} title="Team Formed" />
+          <div className="h-full bg-[#FFD444]" style={{ width: pipelineWidth(pipeline.inProgress) }} title="In Progress" />
+          <div className="h-full bg-emerald-500 rounded-r-full" style={{ width: pipelineWidth(pipeline.submitted) }} title="Solution Submitted" />
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-3 border-t border-slate-100 text-xs">
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-[#006199]" />
-            <span className="text-slate-600 font-medium">Matched (2)</span>
+            <span className="text-slate-600 font-medium">Matched ({pipeline.matched})</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-[#8ACFF8]" />
-            <span className="text-slate-600 font-medium">Team Formed (2)</span>
+            <span className="text-slate-600 font-medium">Team Formed ({pipeline.teamFormed})</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-[#FFD444]" />
-            <span className="text-slate-600 font-medium">In Progress (3)</span>
+            <span className="text-slate-600 font-medium">In Progress ({pipeline.inProgress})</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span className="text-slate-600 font-medium">Submitted (1)</span>
+            <span className="text-slate-600 font-medium">Submitted ({pipeline.submitted})</span>
           </div>
         </div>
       </div>
@@ -146,11 +210,13 @@ export default function UniversityDashboard() {
             onClick={() => navigate('/university/find-problems')}
             className="text-xs font-bold text-[#006199] hover:underline flex items-center space-x-1"
           >
-            <span>View All ({MATCHED_PROBLEMS.length})</span>
+            <span>View All ({recentMatches.length})</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
+        {isLoading && <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Loading university dashboard data...</p>}
+        {dashboardError && <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{dashboardError}</p>}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {recentMatches.map((problem) => (
             <ReportCard
@@ -160,6 +226,9 @@ export default function UniversityDashboard() {
             />
           ))}
         </div>
+        {!isLoading && !dashboardError && recentMatches.length === 0 && (
+          <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">No problems have been matched to this university yet.</p>
+        )}
       </div>
 
       {/* Quick Action CTA Banner */}
