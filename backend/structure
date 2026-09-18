@@ -1,0 +1,47 @@
+backend/
+├── src/
+│   ├── config/
+│   │   ├── supabaseClient.js      # initializes Supabase client (service role key)
+│   │   └── env.js                  # loads & validates environment variables
+│   │
+│   ├── middleware/
+│   │   ├── auth.middleware.js      # verifies Supabase JWT, attaches req.user
+│   │   ├── role.middleware.js      # RBAC — restricts routes by role (citizen/university/industry/government)
+│   │   └── error.middleware.js     # centralized error handler
+│   │
+│   ├── routes/
+│   │   ├── auth.routes.js
+│   │   ├── problems.routes.js      # submit, list, get, verify (government)
+│   │   ├── solutions.routes.js     # accept, team, progress (university)
+│   │   ├── engagements.routes.js   # fund/mentor (industry)
+│   │   ├── discussions.routes.js   # chat messages per problem
+│   │   └── dashboard.routes.js     # aggregated stats per role
+│   │
+│   ├── controllers/
+│   │   ├── auth.controller.js
+│   │   ├── problems.controller.js
+│   │   ├── solutions.controller.js
+│   │   ├── engagements.controller.js
+│   │   ├── discussions.controller.js
+│   │   └── dashboard.controller.js
+│   │
+│   ├── services/
+│   │   ├── problems.service.js     # actual Supabase queries for `problems`
+│   │   ├── solutions.service.js
+│   │   ├── engagements.service.js
+│   │   ├── discussions.service.js
+│   │   ├── dashboard.service.js
+│   │   └── ml.service.js           # calls Person C's POST /analyze
+│   │
+│   ├── utils/
+│   │   ├── asyncHandler.js         # wraps async routes, forwards errors
+│   │   ├── apiResponse.js          # consistent { success, data } shape
+│   │   └── apiError.js             # custom error class with status codes
+│   │
+│   └── app.js                      # express app: middleware, routes mounted here
+│
+├── server.js                       # entry point — starts the HTTP server
+├── .env
+├── .env.example
+├── .gitignore
+└── package.json
