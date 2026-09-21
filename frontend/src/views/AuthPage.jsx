@@ -121,17 +121,18 @@ export default function AuthPage() {
     setErrorMessage('');
     setSuccessMessage('');
 
-    const { password: _password, ...profileData } = formData;
+    
+const displayName = formData.name || formData.orgName || formData.institution || '';
 
-    const result = authMode === 'signin'
-      ? await signIn({ email: formData.email.trim(), password: formData.password })
-      : await signUp({
-          email: formData.email.trim(),
-          password: formData.password,
-          name: formData.name,
-          role: activeRole.id,
-          profileData,
-        });
+const result = authMode === 'signin'
+  ? await signIn({ email: formData.email.trim(), password: formData.password })
+  : await signUp({
+      email: formData.email.trim(),
+      password: formData.password,
+      name: displayName,
+      role: activeRole.id,
+      profileData,
+    });
 
     setLoading(false);
 
@@ -522,53 +523,54 @@ export default function AuthPage() {
                     )}
 
                     {/* NGO / Funder Sign Up */}
-                    {activeRole.id === 'ngo' && (
-                      <>
-                        <div>
-                          <label className="block text-xs font-bold text-[#14213D] uppercase tracking-wider mb-1.5">
-                            Organization / Trust Name
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="e.g. Clean City Foundation"
-                            value={formData.orgName}
-                            onChange={(e) => handleInputChange('orgName', e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl bg-white border border-[#D8D4CB] text-sm text-[#14213D] focus:outline-hidden focus:border-[#E8590C] focus:ring-1 focus:ring-[#E8590C] transition-all"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-bold text-[#14213D] uppercase tracking-wider mb-1.5">
-                              Registration / CSR Number
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              placeholder="e.g. CSR-MH-2024-098"
-                              value={formData.regNumber}
-                              onChange={(e) => handleInputChange('regNumber', e.target.value)}
-                              className="w-full px-4 py-3 rounded-xl bg-white border border-[#D8D4CB] text-sm text-[#14213D] focus:outline-hidden focus:border-[#E8590C] focus:ring-1 focus:ring-[#E8590C] transition-all"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-[#14213D] uppercase tracking-wider mb-1.5">
-                              Domain of Interest
-                            </label>
-                            <select
-                              value={formData.domainInterest}
-                              onChange={(e) => handleInputChange('domainInterest', e.target.value)}
-                              className="w-full px-4 py-3 rounded-xl bg-white border border-[#D8D4CB] text-sm text-[#14213D] focus:outline-hidden focus:border-[#E8590C] transition-all"
-                            >
-                              <option>Public Sanitation</option>
-                              <option>Road Safety</option>
-                              <option>Water Resources</option>
-                              <option>Renewable Power</option>
-                            </select>
-                          </div>
-                        </div>
-                      </>
-                    )}
+                    {/* NGO / Industry Sign Up — covers both role ids */}
+{(activeRole.id === 'industry' || activeRole.id === 'ngo') && (
+  <>
+    <div>
+      <label className="block text-xs font-bold text-[#14213D] uppercase tracking-wider mb-1.5">
+        Organization / Trust Name
+      </label>
+      <input
+        type="text"
+        required
+        placeholder="e.g. Clean City Foundation"
+        value={formData.orgName}
+        onChange={(e) => handleInputChange('orgName', e.target.value)}
+        className="w-full px-4 py-3 rounded-xl bg-white border border-[#D8D4CB] text-sm text-[#14213D] focus:outline-hidden focus:border-[#E8590C] focus:ring-1 focus:ring-[#E8590C] transition-all"
+      />
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label className="block text-xs font-bold text-[#14213D] uppercase tracking-wider mb-1.5">
+          Registration / CSR Number
+        </label>
+        <input
+          type="text"
+          required
+          placeholder="e.g. CSR-MH-2024-098"
+          value={formData.regNumber}
+          onChange={(e) => handleInputChange('regNumber', e.target.value)}
+          className="w-full px-4 py-3 rounded-xl bg-white border border-[#D8D4CB] text-sm text-[#14213D] focus:outline-hidden focus:border-[#E8590C] focus:ring-1 focus:ring-[#E8590C] transition-all"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-bold text-[#14213D] uppercase tracking-wider mb-1.5">
+          Domain of Interest
+        </label>
+        <select
+          value={formData.domainInterest}
+          onChange={(e) => handleInputChange('domainInterest', e.target.value)}
+          className="w-full px-4 py-3 rounded-xl bg-white border border-[#D8D4CB] text-sm text-[#14213D] focus:outline-hidden focus:border-[#E8590C] transition-all"
+        >
+          <option>Public Sanitation</option>
+          <option>Road Safety</option>
+          <option>Water Resources</option>
+          <option>Renewable Power</option>
+        </select>
+      </div>
+    </div>
+  </>
+)}
                   </>
                 )}
 

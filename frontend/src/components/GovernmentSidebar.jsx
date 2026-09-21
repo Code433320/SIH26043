@@ -1,5 +1,4 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -10,6 +9,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { NavLink, Link } from 'react-router-dom';
 
 const navItems = [
   { to: '/government/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -85,8 +85,12 @@ export default function GovernmentSidebar() {
         </nav>
       </div>
 
+
       <div className="p-4 border-t border-slate-100">
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors">
+        <Link
+          to="/government/profile"
+          className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors"
+        >
           <div className="flex items-center space-x-3 min-w-0">
             <img
               src={profile?.profile_data?.avatarUrl || '/logo.png'}
@@ -98,12 +102,12 @@ export default function GovernmentSidebar() {
                 {profile?.name || 'Government'}
               </p>
               <p className="text-[10px] font-mono text-slate-500 truncate mt-0.5">
-                {profile?.id || 'Government account'}
+                {profile?.profile_data?.department || 'Government account'}
               </p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </div>
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#006199] transition-colors" />
+        </Link>
       </div>
     </aside>
   );

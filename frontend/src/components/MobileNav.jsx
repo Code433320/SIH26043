@@ -10,10 +10,13 @@ import {
   Bell, 
   User 
 } from 'lucide-react';
-import { CITIZEN_PROFILE } from '../data/mockData';
+import { useAuth } from '../hooks/useAuth';
 
 export default function MobileNav({ activeTab, setActiveTab, unreadCount = 2 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, profile } = useAuth();
+
+  const displayName = profile?.name || user?.email?.split('@')[0] || 'Citizen';
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -40,6 +43,14 @@ export default function MobileNav({ activeTab, setActiveTab, unreadCount = 2 }) 
       </div>
 
       <div className="flex items-center space-x-2">
+        <button
+          onClick={() => handleSelect('profile')}
+          className="w-8 h-8 rounded-full bg-[#006199] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+          title={displayName}
+        >
+          {displayName.slice(0, 2).toUpperCase()}
+        </button>
+
         <button 
           onClick={() => handleSelect('notifications')} 
           className="p-2 rounded-lg bg-slate-100 text-slate-600 relative"

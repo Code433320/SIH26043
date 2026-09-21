@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -9,7 +9,7 @@ import {
   Building2,
   ChevronRight
 } from 'lucide-react';
-import { INDUSTRY_PROFILE } from '../data/industryMockData';
+import { useAuth } from '../hooks/useAuth';
 
 const navItems = [
   { to: '/industry/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -19,6 +19,10 @@ const navItems = [
 ];
 
 export default function IndustrySidebar() {
+  const { profile } = useAuth();
+
+  const displayName = profile?.name || profile?.profile_data?.orgName || 'Industry Partner';
+
   return (
     <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between h-screen sticky top-0 z-30 select-none hidden lg:flex">
       <div>
@@ -85,24 +89,27 @@ export default function IndustrySidebar() {
       </div>
 
       <div className="p-4 border-t border-slate-100">
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors">
+        <Link
+          to="/industry/profile"
+          className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors"
+        >
           <div className="flex items-center space-x-3 min-w-0">
             <img
-              src={INDUSTRY_PROFILE.avatarUrl}
-              alt={INDUSTRY_PROFILE.name}
+              src={profile?.profile_data?.avatarUrl || '/logo.png'}
+              alt={displayName}
               className="w-9 h-9 rounded-full object-cover border border-[#006199]/20 flex-shrink-0"
             />
             <div className="min-w-0">
               <p className="text-xs font-bold text-slate-900 truncate leading-tight">
-                {INDUSTRY_PROFILE.name}
+                {displayName}
               </p>
               <p className="text-[10px] font-mono text-slate-500 truncate mt-0.5">
-                {INDUSTRY_PROFILE.industryId}
+                {profile?.profile_data?.regNumber || 'Industry account'}
               </p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </div>
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#006199] transition-colors" />
+        </Link>
       </div>
     </aside>
   );

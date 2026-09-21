@@ -10,9 +10,20 @@ import {
   ChevronRight,
   LogOut
 } from 'lucide-react';
-import { CITIZEN_PROFILE } from '../data/mockData';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Sidebar({ activeTab, setActiveTab, unreadCount = 2 }) {
+  const { user, profile } = useAuth();
+
+  const displayName = profile?.name || user?.email?.split('@')[0] || 'Citizen';
+  const displayId = user?.id ? `CIV-${user.id.slice(0, 8).toUpperCase()}` : '';
+  const initials = displayName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'report', label: 'Report a Problem', icon: PlusCircle, isCta: true },
@@ -101,31 +112,27 @@ export default function Sidebar({ activeTab, setActiveTab, unreadCount = 2 }) {
         </nav>
       </div>
 
-      {/* Citizen Mini Profile Card */}
+      {/* Citizen Mini Profile Card — now real data, whole card opens Profile */}
       <div className="p-4 border-t border-slate-100">
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors">
+        <button
+          onClick={() => setActiveTab('profile')}
+          className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors text-left"
+        >
           <div className="flex items-center space-x-3 min-w-0">
-            <img 
-              src={CITIZEN_PROFILE.avatarUrl} 
-              alt={CITIZEN_PROFILE.name} 
-              className="w-9 h-9 rounded-full object-cover border border-[#006199]/20 flex-shrink-0" 
-            />
+            <div className="w-9 h-9 rounded-full bg-[#006199] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 border border-[#006199]/20">
+              {initials}
+            </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-slate-900 truncate leading-tight">
-                {CITIZEN_PROFILE.name}
+                {displayName}
               </p>
               <p className="text-[10px] font-mono text-slate-500 truncate mt-0.5">
-                {CITIZEN_PROFILE.citizenId}
+                {displayId}
               </p>
             </div>
           </div>
-          <button 
-            title="Citizen Portal Active"
-            className="p-1.5 text-slate-400 group-hover:text-[#006199] transition-colors"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#006199] transition-colors flex-shrink-0" />
+        </button>
       </div>
     </aside>
   );

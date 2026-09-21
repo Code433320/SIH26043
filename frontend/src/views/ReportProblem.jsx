@@ -4,35 +4,24 @@ import {
   CheckCircle2, 
   ArrowRight, 
   ArrowLeft, 
-  Construction, 
-  Trash2, 
-  Droplets, 
-  Lightbulb, 
-  Waves, 
-  Sparkles, 
-  Building2, 
-  HelpCircle,
-  FileCheck,
   Send,
   MapPin,
-  Image as ImageIcon
 } from 'lucide-react';
 import LocationPicker from '../components/LocationPicker';
 import FileUploader from '../components/FileUploader';
-import { CATEGORIES } from '../data/mockData';
+import { CATEGORIES } from '../data/categories';
 import { apiFetch } from '../lib/apiClient';
 import { mapProblemToReport } from '../lib/problemMapper';
 
 export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
   const [currentStep, setCurrentStep] = useState(1);
+
   const [formData, setFormData] = useState({
     title: '',
     category: 'Road Damage',
     description: '',
-    location: { address: 'Main Road, Swargate, Pune', landmark: 'Near Gate #2', lat: 18.5204, lng: 73.8567 },
-    files: [
-      { id: 1, name: 'pothole_evidence.jpg', size: '2.4 MB', type: 'image', url: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&auto=format&fit=crop' }
-    ]
+    location: { address: '', landmark: '', lat: null, lng: null },
+    files: []
   });
 
   const [submittedReport, setSubmittedReport] = useState(null);
@@ -47,6 +36,11 @@ export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
   ];
 
   const handleNext = () => {
+    if (currentStep === 2 && !formData.location.address.trim()) {
+      setSubmitError('Please select or enter a location before continuing.');
+      return;
+    }
+    setSubmitError('');
     if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
@@ -58,6 +52,11 @@ export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
     e.preventDefault();
     if (!formData.title.trim() || !formData.description.trim()) {
       setSubmitError('Title and description are required before submitting.');
+      return;
+    }
+    if (!formData.location.address.trim()) {
+      setSubmitError('Location is required before submitting.');
+      setCurrentStep(2);
       return;
     }
 
@@ -213,22 +212,26 @@ export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
                   Select Category *
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {CATEGORIES.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, category: cat.name })}
-                      className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                        formData.category === cat.name
-                          ? "border-[#006199] bg-[#8ACFF8]/15 ring-2 ring-[#006199]/20"
-                          : "border-slate-200 hover:border-slate-300 bg-white"
-                      }`}
-                    >
-                      <span className={`text-xs font-bold ${formData.category === cat.name ? "text-[#006199]" : "text-slate-800"}`}>
-                        {cat.name}
-                      </span>
-                    </button>
-                  ))}
+          {CATEGORIES.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, category: cat.name })}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
+                      formData.category === cat.name
+                        ? "border-[#006199] bg-[#8ACFF8]/15 ring-2 ring-[#006199]/20"
+                        : "border-slate-200 hover:border-slate-300 bg-white"
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 mb-1.5 ${formData.category === cat.name ? "text-[#006199]" : "text-slate-400"}`} />
+                    <span className={`text-xs font-bold ${formData.category === cat.name ? "text-[#006199]" : "text-slate-800"}`}>
+                      {cat.name}
+                    </span>
+                  </button>
+                );
+              })}
                 </div>
               </div>
 
@@ -311,11 +314,11 @@ export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
                   </div>
                   <div>
                     <span className="text-slate-400 font-medium">Title:</span>
-                    <p className="font-bold text-slate-900">{formData.title || "Pothole on Main Road"}</p>
+                    <p className="font-bold text-slate-900">{formData.title}</p>
                   </div>
                   <div>
                     <span className="text-slate-400 font-medium">Description:</span>
-                    <p className="text-slate-600 line-clamp-3">{formData.description || "Deep asphalt pothole causing traffic obstruction."}</p>
+                    <p className="text-slate-600 line-clamp-3">{formData.description}</p>
                   </div>
                 </div>
 
@@ -329,7 +332,7 @@ export default function ReportProblem({ onSubmitSuccess, onNavigate }) {
                   </div>
                   <div>
                     <span className="text-slate-400 font-medium">Landmark:</span>
-                    <p className="font-medium text-slate-700">{formData.location.landmark}</p>
+                    <p className="font-medium text-slate-700">{formData.location.landmark || '—'}</p>
                   </div>
                   <div>
                     <span className="text-slate-400 font-medium">Media Attached:</span>

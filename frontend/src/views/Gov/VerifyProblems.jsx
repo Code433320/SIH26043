@@ -25,14 +25,14 @@ export default function VerifyProblems() {
     `${problem.title} ${problem.location} ${problem.category}`.toLowerCase().includes(query.toLowerCase())
   );
 
-  const verifyProblem = async (id) => {
+  const approveProblem = async (id) => {
     setActionId(id);
     setError('');
     try {
-      await apiFetch(`/problems/${id}/verify`, { method: 'POST' });
+      await apiFetch(`/problems/${id}/approve`, { method: 'POST' });
       loadProblems();
     } catch (actionError) {
-      setError(actionError.message || 'Could not verify problem.');
+      setError(actionError.message || 'Could not approve problem.');
     } finally {
       setActionId('');
     }
@@ -51,7 +51,7 @@ export default function VerifyProblems() {
         {visibleProblems.map((problem) => (
           <div key={problem.id} className="premium-card rounded-2xl p-5 bg-white border border-slate-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
             <div className="min-w-0"><div className="flex items-center gap-2 mb-2 flex-wrap"><span className="text-xs font-mono font-bold px-2.5 py-1 rounded-md bg-[#006199] text-white">{problem.id}</span><StatusBadge status={problem.status} /></div><h3 className="text-lg font-black text-slate-900">{problem.title}</h3><p className="text-sm text-slate-600 mt-1">{problem.description}</p><div className="flex items-center gap-4 text-xs text-slate-500 mt-3"><span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-[#006199]" />{problem.location}</span><span>{problem.category}</span></div></div>
-            <div className="flex items-center gap-2 shrink-0"><button disabled={actionId === problem.id} onClick={() => verifyProblem(problem.id)} className="inline-flex items-center gap-2 rounded-xl bg-[#006199] px-4 py-2.5 text-xs font-bold text-white disabled:opacity-60"><CheckCircle2 className="w-4 h-4" />{actionId === problem.id ? 'Verifying...' : 'Verify'}</button><button disabled={actionId === problem.id} className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-xs font-bold text-red-700 disabled:opacity-60"><XCircle className="w-4 h-4" />Flag</button></div>
+            <div className="flex items-center gap-2 shrink-0"><button disabled={actionId === problem.id} onClick={() => approveProblem(problem.id)} className="inline-flex items-center gap-2 rounded-xl bg-[#006199] px-4 py-2.5 text-xs font-bold text-white disabled:opacity-60"><CheckCircle2 className="w-4 h-4" />{actionId === problem.id ? 'Approving...' : 'Approve'}</button><button disabled={actionId === problem.id} className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-xs font-bold text-red-700 disabled:opacity-60"><XCircle className="w-4 h-4" />Flag</button></div>
           </div>
         ))}
       </div>

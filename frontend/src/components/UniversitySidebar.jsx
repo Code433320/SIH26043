@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -9,7 +9,7 @@ import {
   GraduationCap,
   ChevronRight
 } from 'lucide-react';
-import { UNIVERSITY_PROFILE } from '../data/uniMockData';
+import { useAuth } from '../hooks/useAuth';
 
 const navItems = [
   { to: '/university/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -19,6 +19,18 @@ const navItems = [
 ];
 
 export default function UniversitySidebar() {
+  const { user, profile } = useAuth();
+
+  const displayName =
+    profile?.name || profile?.profile_data?.institution || user?.email?.split('@')[0] || 'University';
+  const displayId = user?.id ? `UNIV-${user.id.slice(0, 8).toUpperCase()}` : '';
+  const initials = displayName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between h-screen sticky top-0 z-30 select-none hidden lg:flex">
       <div>
@@ -85,24 +97,25 @@ export default function UniversitySidebar() {
       </div>
 
       <div className="p-4 border-t border-slate-100">
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors">
+        <Link
+          to="/university/profile"
+          className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between group hover:border-[#006199]/30 transition-colors"
+        >
           <div className="flex items-center space-x-3 min-w-0">
-            <img
-              src={UNIVERSITY_PROFILE.avatarUrl}
-              alt={UNIVERSITY_PROFILE.name}
-              className="w-9 h-9 rounded-full object-cover border border-[#006199]/20 flex-shrink-0"
-            />
+            <div className="w-9 h-9 rounded-full bg-[#006199] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 border border-[#006199]/20">
+              {initials}
+            </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-slate-900 truncate leading-tight">
-                {UNIVERSITY_PROFILE.name}
+                {displayName}
               </p>
               <p className="text-[10px] font-mono text-slate-500 truncate mt-0.5">
-                {UNIVERSITY_PROFILE.universityId}
+                {displayId}
               </p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </div>
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#006199] transition-colors flex-shrink-0" />
+        </Link>
       </div>
     </aside>
   );
