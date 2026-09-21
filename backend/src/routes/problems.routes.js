@@ -15,12 +15,20 @@ router.get('/', requireAuth, problemsController.listProblems);
 // Shared Problem Detail page — any logged-in role
 router.get('/:id', requireAuth, problemsController.getProblem);
 
-// Government verifies a problem's authenticity
+// Government approves a problem for the university matching pipeline.
+router.post(
+  '/:id/approve',
+  requireAuth,
+  requireRole(['government']),
+  problemsController.approveProblem
+);
+
+// Backward-compatible alias for clients using the previous endpoint name.
 router.post(
   '/:id/verify',
   requireAuth,
   requireRole(['government']),
-  problemsController.verifyProblem
+  problemsController.approveProblem
 );
 
 export default router;

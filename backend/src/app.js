@@ -6,8 +6,9 @@ import problemsRoutes from './routes/problems.routes.js';
 import solutionsRoutes from './routes/solutions.routes.js';
 import engagementsRoutes from './routes/engagements.routes.js';
 import discussionsRoutes from './routes/discussions.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
-
 dotenv.config();
 
 const app = express();
@@ -25,10 +26,14 @@ app.get('/health', (req, res) => res.json({ success: true, message: 'API is runn
 
 // Resource routes — add solutions/engagements/discussions/dashboard here
 // as you build them, following the same pattern as problems.routes.js
+app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/problems', problemsRoutes);
 app.use('/api/solutions', solutionsRoutes);
 app.use('/api/engagements', engagementsRoutes);
 app.use('/api/discussions', discussionsRoutes);
+
+
 
 // 404 handler — anything that didn't match a route above
 app.use((req, res) => {

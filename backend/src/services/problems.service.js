@@ -50,18 +50,26 @@ export const listProblems = async (filters = {}) => {
   return data;
 };
 
-// UPDATE — government verifies a problem's authenticity
-export const verifyProblem = async (id) => {
+// UPDATE — government approves a submitted problem for the matching pipeline.
+export const approveProblem = async (id) => {
   const { data, error } = await supabase
     .from('problems')
     .update({ status: 'verified' })
     .eq('id', id)
+    .in('status', ['submitted', 'pending'])
     .select()
     .single();
+
+  if (error?.code === 'PGRST116') {
+    throw new ApiError(409, 'Problem is missing or has already been reviewed');
+  }
 
   if (error) throw new ApiError(500, error.message);
   return data;
 };
+
+// Backward-compatible name for existing internal callers.
+export const verifyProblem = approveProblem;
 
 // UPDATE — used internally once ML analysis / university matching completes
 export const updateProblemStatus = async (id, updates) => {
