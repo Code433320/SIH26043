@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import StatusTimeline from '../components/StatusTimeline';
+import DiscussionThread from '../components/DiscussionThread';
 
 export default function ProblemDetail({ report, onBack }) {
   if (!report) return null;
@@ -185,6 +186,9 @@ export default function ProblemDetail({ report, onBack }) {
               ))}
             </div>
           </div>
+
+          {/* Discussion / Chat — open collaboration on this problem */}
+          <DiscussionThread problemId={report.id} />
         </div>
       </div>
     </motion.div>

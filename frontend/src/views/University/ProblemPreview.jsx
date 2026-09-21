@@ -12,7 +12,8 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import StatusBadge from '../../components/StatusBadge';
 import { apiFetch } from '../../lib/apiClient';
@@ -23,6 +24,11 @@ export default function ProblemPreview() {
   const navigate = useNavigate();
   const [problem, setProblem] = useState(null);
   const [error, setError] = useState('');
+  const [solutionTitle, setSolutionTitle] = useState('');
+  const [solutionDescription, setSolutionDescription] = useState('');
+  const [teamName, setTeamName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     setProblem(null);
@@ -35,6 +41,33 @@ export default function ProblemPreview() {
 
   const requirements = problem?.requirements || [];
   const evidence = problem?.evidence || [];
+
+  const handleAccept = async (e) => {
+    e.preventDefault();
+    if (!solutionTitle.trim() || !solutionDescription.trim()) {
+      setSubmitError('Solution title and description are required.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      await apiFetch('/solutions', {
+        method: 'POST',
+        body: JSON.stringify({
+          problem_id: problem.id,
+          title: solutionTitle.trim(),
+          description: solutionDescription.trim(),
+          team_name: teamName.trim() || null,
+        }),
+      });
+      navigate('/university/my-projects');
+    } catch (err) {
+      setSubmitError(err.message || 'Could not submit your solution.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <motion.div
@@ -91,7 +124,65 @@ export default function ProblemPreview() {
 
               <div className="space-y-5">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5"><h3 className="text-base font-bold text-slate-900 mb-4">Problem Details</h3><div className="space-y-3 text-sm text-slate-600"><div className="flex items-center gap-3"><MapPin className="w-4 h-4 text-[#006199]" /><span>{problem.location}</span></div><div className="flex items-center gap-3"><Calendar className="w-4 h-4 text-[#006199]" /><span>Submitted: {problem.submittedDate}</span></div><div className="flex items-center gap-3"><Clock3 className="w-4 h-4 text-[#006199]" /><span>Status: {problem.status}</span></div><div className="flex items-center gap-3"><Users className="w-4 h-4 text-[#006199]" /><span>Lead Team: {problem.teamLead || 'Not assigned'}</span></div><div className="flex items-center gap-3"><BriefcaseBusiness className="w-4 h-4 text-[#006199]" /><span>Department: {problem.department}</span></div></div></div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5"><h3 className="text-base font-bold text-slate-900 mb-3">Recommended Action</h3><p className="text-sm text-slate-600 leading-relaxed">Review the live civic problem details and assign it to a university project when your team is ready.</p><button onClick={() => navigate('/university/my-projects')} className="mt-5 w-full rounded-xl bg-[#FFD444] hover:bg-[#ffe066] text-[#003F66] font-bold py-3 text-sm">Assign to My Project</button></div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <h3 className="text-base font-bold text-slate-900 mb-3">Form Team &amp; Submit Solution</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                    Claim this problem and start a project — this creates a solution entry your team can track.
+                  </p>
+                  <form onSubmit={handleAccept} className="space-y-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Solution Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={solutionTitle}
+                        onChange={(e) => setSolutionTitle(e.target.value)}
+                        placeholder="e.g. AI-based pothole detection system"
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-[#006199]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Approach Description *
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={solutionDescription}
+                        onChange={(e) => setSolutionDescription(e.target.value)}
+                        placeholder="Briefly describe your proposed approach..."
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-[#006199]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Team Name <span className="text-slate-400 font-normal normal-case">(optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={teamName}
+                        onChange={(e) => setTeamName(e.target.value)}
+                        placeholder="e.g. Team Innovate"
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-[#006199]"
+                      />
+                    </div>
+
+                    {submitError && (
+                      <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        {submitError}
+                      </p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="mt-2 w-full rounded-xl bg-[#FFD444] hover:bg-[#ffe066] text-[#003F66] font-bold py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-60"
+                    >
+                      {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {isSubmitting ? 'Submitting...' : 'Accept & Form Team'}
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
