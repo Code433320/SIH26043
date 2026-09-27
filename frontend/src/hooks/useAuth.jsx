@@ -100,21 +100,7 @@ export function AuthProvider({ children }) {
     return { data, error };
   };
 
-  // const signIn = async ({ email, password }) => {
-  //   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  //   if (!error && data.session?.user) {
-  //     setSession(data.session);
-  //     const loadedProfile = await loadProfile(data.session.user.id);
-  //     setLoading(false);
-  //     return { data, error, profile: loadedProfile };
-  //   }
-
-    
-  //   return { data, error };
-  //   console.log("access token:", data.session?.access_token);
-  // };
-
+  
   
 const signIn = async ({ email, password }) => {
   const { data, error } = await supabase.auth.signInWithPassword({

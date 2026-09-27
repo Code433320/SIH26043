@@ -62,7 +62,7 @@ const roleRoutes = {
 export default function AuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signOut } = useAuth();
   const initialRoleParam = searchParams.get('role');
 
   const [selectedRole, setSelectedRole] = useState(
@@ -115,46 +115,69 @@ export default function AuthPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMessage('');
-    setSuccessMessage('');
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setErrorMessage('');
+  setSuccessMessage('');
 
-    
-const displayName = formData.name || formData.orgName || formData.institution || '';
+  const displayName = formData.name || formData.orgName || formData.institution || '';
+  const { password: _password, ...profileData } = formData;
 
-const result = authMode === 'signin'
-  ? await signIn({ email: formData.email.trim(), password: formData.password })
-  : await signUp({
-      email: formData.email.trim(),
-      password: formData.password,
-      name: displayName,
-      role: activeRole.id,
-      profileData,
-    });
+  const result = authMode === 'signin'
+    ? await signIn({ email: formData.email.trim(), password: formData.password })
+    : await signUp({
+        email: formData.email.trim(),
+        password: formData.password,
+        name: displayName,
+        role: activeRole.id,
+        profileData,
+      });
 
-    setLoading(false);
+  setLoading(false);
 
-    if (result.error) {
-      setErrorMessage(result.error.message || 'Authentication failed. Please try again.');
-      return;
-    }
+  if (result.error) {
+    setErrorMessage(result.error.message || 'Authentication failed. Please try again.');
+    return;
+  }
 
-    if (authMode === 'signup' && !result.data?.session) {
-      setSuccessMessage('Account created. Check your email to confirm the account before signing in.');
-      return;
-    }
+  if (authMode === 'signup' && !result.data?.session) {
+    setSuccessMessage('Account created. Check your email to confirm the account before signing in.');
+    return;
+  }
 
-    if (authMode === 'signup' && activeRole?.requiresApproval) {
-      setShowApprovalModal(true);
-      return;
-    }
+  if (authMode === 'signup' && activeRole?.requiresApproval) {
+    setShowApprovalModal(true);
+    return;
+  }
 
-    const authenticatedRole = result.profile?.role || activeRole?.id;
-    const redirectPath = roleRoutes[authenticatedRole] || '/app';
-    navigate(redirectPath, { replace: true });
+  if (!result.profile?.role) {
+    setErrorMessage('Could not verify your account role. Please try again.');
+    return;
+  }
+
+  // ↓↓↓ NEW BLOCK GOES HERE ↓↓↓
+  const roleGroups = {
+    citizen: ['citizen'],
+    government: ['government'],
+    university: ['university', 'student'],
+    industry: ['industry', 'ngo'],
   };
+
+  const isMatchingRole = roleGroups[activeRole.id]?.includes(result.profile.role);
+
+  if (authMode === 'signin' && !isMatchingRole) {
+    setErrorMessage(
+      `These credentials are registered as ${result.profile.role}, not ${activeRole.label}. Please select the correct role.`
+    );
+    await signOut();
+    return;
+  }
+  // ↑↑↑ NEW BLOCK ENDS HERE ↑↑↑
+
+  const redirectPath = roleRoutes[result.profile.role] || '/app';
+  navigate(redirectPath, { replace: true });
+};
 
   const handleGoogleAuth = async () => {
     setLoading(true);
